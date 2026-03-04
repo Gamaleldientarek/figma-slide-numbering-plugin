@@ -17,7 +17,7 @@
     #app {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
     }
 
     label {
@@ -50,38 +50,145 @@
       border-color: var(--figma-color-border-strong);
     }
 
-    #empty-state {
+    button#run-btn {
+      width: 100%;
+      height: 32px;
+      font-size: 11px;
+      font-family: inherit;
+      font-weight: 600;
+      color: var(--figma-color-text-onbrand);
+      background: var(--figma-color-bg-brand);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    button#run-btn:hover  { background: var(--figma-color-bg-brand-hover); }
+    button#run-btn:active { background: var(--figma-color-bg-brand-pressed); }
+    button#run-btn:disabled {
+      background: var(--figma-color-bg-disabled);
+      color: var(--figma-color-text-disabled);
+      cursor: not-allowed;
+    }
+
+    #results {
+      display: none;
+      flex-direction: column;
+      gap: 4px;
+      border-top: 1px solid var(--figma-color-border);
+      padding-top: 12px;
+    }
+
+    .result-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .result-label { color: var(--figma-color-text-secondary); }
+
+    .result-value { font-weight: 600; }
+
+    .result-value.error { color: #f24822; }
+
+    #empty-state, #no-slides-state {
       font-size: 11px;
       color: var(--figma-color-text-secondary);
       text-align: center;
       padding: 16px 0;
     }
+
+    #error-list {
+      margin-top: 4px;
+      border-top: 1px solid var(--figma-color-border);
+      padding-top: 8px;
+    }
+
+    .error-item {
+      color: #f24822;
+      margin-bottom: 4px;
+    }
   </style>
 </head>
 <body>
   <div id="app">
+
+    <!-- Section selector -->
     <div id="section-row">
       <label for="section-select">Section</label>
       <select id="section-select"></select>
       <p id="empty-state" style="display:none;">No sections found on this page.</p>
     </div>
 
-    <!-- Config controls — added in T012 -->
-    <!-- Run button — added in T011 -->
-    <!-- Results display — added in T011/T016 -->
+    <!-- Config controls — added in T012 (Phase 4) -->
+
+    <!-- Run button -->
+    <button id="run-btn" disabled>Run</button>
+
+    <!-- No slides found state -->
+    <p id="no-slides-state" style="display:none;">No slides found matching the current size filter.</p>
+
+    <!-- Results summary -->
+    <div id="results">
+      <div class="result-row">
+        <span class="result-label">Total slides</span>
+        <span class="result-value" id="res-total">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Updated</span>
+        <span class="result-value" id="res-updated">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Covers skipped</span>
+        <span class="result-value" id="res-skipped">—</span>
+      </div>
+      <div class="result-row">
+        <span class="result-label">Errors</span>
+        <span class="result-value" id="res-errors">—</span>
+      </div>
+      <div id="error-list" style="display:none;"></div>
+    </div>
+
   </div>
 
   <script>
-    // postMessage bridge between ui.html and code.js
+    // Default config — Phase 4 (T012) will wire these to form inputs
+    const DEFAULTS = {
+      identifier: '{p#}',
+      minWidth: 1900,
+      maxWidth: 1950,
+      minHeight: 1070,
+      maxHeight: 1090,
+      yTolerance: 50,
+      startingNumber: 1,
+    };
+
     function sendMessage(type, payload) {
       parent.postMessage({ pluginMessage: { type, ...payload } }, '*');
     }
+
+    const runBtn = document.getElementById('run-btn');
+    const sectionSelect = document.getElementById('section-select');
+
+    runBtn.addEventListener('click', () => {
+      const sectionId = sectionSelect.value;
+      if (!sectionId) return;
+
+      runBtn.disabled = true;
+      runBtn.textContent = 'Running…';
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('no-slides-state').style.display = 'none';
+
+      sendMessage('run-numbering', {
+        config: { sectionId, ...DEFAULTS },
+      });
+    });
 
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
       if (!msg) return;
 
       switch (msg.type) {
+
         case 'sections-list': {
           const select = document.getElementById('section-select');
           msg.sections.forEach(s => {
@@ -90,16 +197,52 @@
             opt.textContent = s.name;
             select.appendChild(opt);
           });
+          runBtn.disabled = false;
           break;
         }
+
         case 'no-sections': {
-          document.getElementById('section-select').style.display = 'none';
+          sectionSelect.style.display = 'none';
           document.getElementById('empty-state').style.display = 'block';
           break;
         }
-        case 'numbering-complete':
-          // T011/T016: display results
+
+        case 'numbering-complete': {
+          const r = msg.result;
+          runBtn.disabled = false;
+          runBtn.textContent = 'Run';
+
+          if (r.totalSlides === 0 && r.errors.length === 0) {
+            document.getElementById('no-slides-state').style.display = 'block';
+            break;
+          }
+
+          document.getElementById('res-total').textContent   = r.totalSlides;
+          document.getElementById('res-updated').textContent = r.updated;
+          document.getElementById('res-skipped').textContent = r.skipped;
+
+          const errCount = document.getElementById('res-errors');
+          errCount.textContent = r.errors.length;
+          errCount.className = 'result-value' + (r.errors.length > 0 ? ' error' : '');
+
+          const errorList = document.getElementById('error-list');
+          if (r.errors.length > 0) {
+            errorList.innerHTML = '';
+            r.errors.forEach(e => {
+              const div = document.createElement('div');
+              div.className = 'error-item';
+              div.textContent = `Slide "${e.slideName}" (p.${e.pageNumber}): ${e.message}`;
+              errorList.appendChild(div);
+            });
+            errorList.style.display = 'block';
+          } else {
+            errorList.style.display = 'none';
+          }
+
+          document.getElementById('results').style.display = 'flex';
           break;
+        }
+
         default:
           console.warn('Unhandled message:', msg.type);
       }
