@@ -1,7 +1,7 @@
 // Slide Numbering Plugin — code.js
 // Main thread: runs in Figma plugin sandbox (ES2020+)
 
-figma.showUI(__html__, { width: 320, height: 500, themeColors: true });
+figma.showUI(__html__, { width: 320, height: 560, themeColors: true });
 
 // ---------------------------------------------------------------------------
 // T006: Slide detection
@@ -66,7 +66,8 @@ function findPageNumNode(node, identifier) {
 // (Fix m8: undo grouping so Cmd+Z reverts the whole operation)
 // ---------------------------------------------------------------------------
 async function numberSlides(slides, config) {
-  const result = { totalSlides: slides.length, updated: 0, skipped: 0, errors: [] };
+  // T018: slideDetails carries per-slide info for the results log in ui.html
+  const result = { totalSlides: slides.length, updated: 0, skipped: 0, errors: [], slideDetails: [] };
   let pageNum = config.startingNumber - 1;
 
   // Cancellation support (M2)
@@ -74,14 +75,14 @@ async function numberSlides(slides, config) {
   let notifyHandle = null;
   if (slides.length > 20) {
     notifyHandle = figma.notify('Numbering slides…', {
-      timeout: Infinity,
+      timeout: 0,
       button: { text: 'Cancel', action: () => { cancelled = true; } },
     });
   }
 
   for (const slide of slides) {
     if (cancelled) {
-      notifyHandle?.cancel();
+      if (notifyHandle) notifyHandle.cancel();
       figma.notify('Numbering cancelled.');
       break;
     }
@@ -91,16 +92,15 @@ async function numberSlides(slides, config) {
 
     if (!pNode) {
       result.skipped++;
+      result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'cover' });
       continue;
     }
 
     try {
       if (pNode.hasMissingFont) {
-        result.errors.push({
-          slideName: slide.name,
-          pageNumber: pageNum,
-          message: 'Missing font — cannot update this slide.',
-        });
+        const errMsg = 'Missing font — cannot update this slide.';
+        result.errors.push({ slideName: slide.name, pageNumber: pageNum, message: errMsg });
+        result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'error' });
         continue;
       }
 
@@ -113,12 +113,11 @@ async function numberSlides(slides, config) {
 
       pNode.characters = String(pageNum);
       result.updated++;
+      result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'updated' });
     } catch (err) {
-      result.errors.push({
-        slideName: slide.name,
-        pageNumber: pageNum,
-        message: err.message || 'Unknown error',
-      });
+      const errMsg = err.message || 'Unknown error';
+      result.errors.push({ slideName: slide.name, pageNumber: pageNum, message: errMsg });
+      result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'error' });
     }
   }
 
@@ -178,6 +177,11 @@ figma.ui.onmessage = async (msg) => {
       const sorted = sortSlides(slides, config.yTolerance);
       const result = await numberSlides(sorted, config);
       figma.ui.postMessage({ type: 'numbering-complete', result });
+      break;
+    }
+
+    case 'open-url': {
+      figma.openExternal(msg.url);
       break;
     }
 
