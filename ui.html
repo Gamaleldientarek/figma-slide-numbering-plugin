@@ -28,7 +28,7 @@
       margin-bottom: 4px;
     }
 
-    select {
+    select, input[type="text"], input[type="number"] {
       width: 100%;
       height: 28px;
       padding: 0 8px;
@@ -38,6 +38,9 @@
       background: var(--figma-color-bg);
       border: 1px solid var(--figma-color-border);
       border-radius: 4px;
+    }
+
+    select {
       cursor: pointer;
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
@@ -45,9 +48,44 @@
       background-position: right 8px center;
     }
 
-    select:focus {
+    select:focus, input:focus {
       outline: none;
       border-color: var(--figma-color-border-strong);
+    }
+
+    input.invalid {
+      border-color: #f24822;
+    }
+
+    /* Two-column range row */
+    .range-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .range-row .field { display: flex; flex-direction: column; gap: 4px; }
+
+    /* Collapsible advanced section */
+    #advanced-toggle {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 11px;
+      font-family: inherit;
+      color: var(--figma-color-text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    #advanced-toggle:hover { color: var(--figma-color-text); }
+
+    #advanced-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     button#run-btn {
@@ -71,6 +109,12 @@
       cursor: not-allowed;
     }
 
+    .validation-error {
+      color: #f24822;
+      font-size: 10px;
+      margin-top: 2px;
+    }
+
     #results {
       display: none;
       flex-direction: column;
@@ -85,9 +129,7 @@
     }
 
     .result-label { color: var(--figma-color-text-secondary); }
-
     .result-value { font-weight: 600; }
-
     .result-value.error { color: #f24822; }
 
     #empty-state, #no-slides-state {
@@ -113,19 +155,71 @@
   <div id="app">
 
     <!-- Section selector -->
-    <div id="section-row">
+    <div>
       <label for="section-select">Section</label>
       <select id="section-select"></select>
       <p id="empty-state" style="display:none;">No sections found on this page.</p>
     </div>
 
-    <!-- Config controls — added in T012 (Phase 4) -->
+    <!-- Advanced config (collapsible) -->
+    <div>
+      <button id="advanced-toggle" type="button">▶ Advanced settings</button>
+      <div id="advanced-body" style="display:none; margin-top:10px;">
+
+        <div>
+          <label for="identifier">Page number identifier</label>
+          <input type="text" id="identifier" value="{p#}" />
+        </div>
+
+        <div>
+          <label>Width range (px)</label>
+          <div class="range-row">
+            <div class="field">
+              <label for="min-width" style="font-weight:400;">Min</label>
+              <input type="number" id="min-width" value="1900" min="1" />
+            </div>
+            <div class="field">
+              <label for="max-width" style="font-weight:400;">Max</label>
+              <input type="number" id="max-width" value="1950" min="1" />
+            </div>
+          </div>
+          <p class="validation-error" id="width-error" style="display:none;">Min must be ≤ Max</p>
+        </div>
+
+        <div>
+          <label>Height range (px)</label>
+          <div class="range-row">
+            <div class="field">
+              <label for="min-height" style="font-weight:400;">Min</label>
+              <input type="number" id="min-height" value="1070" min="1" />
+            </div>
+            <div class="field">
+              <label for="max-height" style="font-weight:400;">Max</label>
+              <input type="number" id="max-height" value="1090" min="1" />
+            </div>
+          </div>
+          <p class="validation-error" id="height-error" style="display:none;">Min must be ≤ Max</p>
+        </div>
+
+        <div class="range-row">
+          <div class="field">
+            <label for="y-tolerance">Y tolerance (px)</label>
+            <input type="number" id="y-tolerance" value="50" min="0" />
+          </div>
+          <div class="field">
+            <label for="starting-number">Starting number</label>
+            <input type="number" id="starting-number" value="1" min="0" />
+          </div>
+        </div>
+
+      </div>
+    </div>
 
     <!-- Run button -->
     <button id="run-btn" disabled>Run</button>
 
     <!-- No slides found state -->
-    <p id="no-slides-state" style="display:none;">No slides found matching the current size filter.</p>
+    <p id="no-slides-state" style="display:none;"></p>
 
     <!-- Results summary -->
     <div id="results">
@@ -151,36 +245,89 @@
   </div>
 
   <script>
-    // Default config — Phase 4 (T012) will wire these to form inputs
-    const DEFAULTS = {
-      identifier: '{p#}',
-      minWidth: 1900,
-      maxWidth: 1950,
-      minHeight: 1070,
-      maxHeight: 1090,
-      yTolerance: 50,
-      startingNumber: 1,
-    };
-
     function sendMessage(type, payload) {
       parent.postMessage({ pluginMessage: { type, ...payload } }, '*');
+    }
+
+    // Advanced toggle
+    const advancedToggle = document.getElementById('advanced-toggle');
+    const advancedBody = document.getElementById('advanced-body');
+    let advancedOpen = false;
+    advancedToggle.addEventListener('click', () => {
+      advancedOpen = !advancedOpen;
+      advancedBody.style.display = advancedOpen ? 'flex' : 'none';
+      advancedToggle.textContent = (advancedOpen ? '▼' : '▶') + ' Advanced settings';
+    });
+
+    // T015: Input validation
+    function validate() {
+      let valid = true;
+
+      const minW = parseInt(document.getElementById('min-width').value, 10);
+      const maxW = parseInt(document.getElementById('max-width').value, 10);
+      const widthErr = document.getElementById('width-error');
+      if (minW > maxW) {
+        widthErr.style.display = 'block';
+        document.getElementById('min-width').classList.add('invalid');
+        document.getElementById('max-width').classList.add('invalid');
+        valid = false;
+      } else {
+        widthErr.style.display = 'none';
+        document.getElementById('min-width').classList.remove('invalid');
+        document.getElementById('max-width').classList.remove('invalid');
+      }
+
+      const minH = parseInt(document.getElementById('min-height').value, 10);
+      const maxH = parseInt(document.getElementById('max-height').value, 10);
+      const heightErr = document.getElementById('height-error');
+      if (minH > maxH) {
+        heightErr.style.display = 'block';
+        document.getElementById('min-height').classList.add('invalid');
+        document.getElementById('max-height').classList.add('invalid');
+        valid = false;
+      } else {
+        heightErr.style.display = 'none';
+        document.getElementById('min-height').classList.remove('invalid');
+        document.getElementById('max-height').classList.remove('invalid');
+      }
+
+      const identifier = document.getElementById('identifier').value.trim();
+      if (!identifier) valid = false;
+
+      const startingNumber = parseInt(document.getElementById('starting-number').value, 10);
+      if (isNaN(startingNumber) || startingNumber < 0) valid = false;
+
+      return valid;
+    }
+
+    // T013: Build PluginConfig from form values
+    function getConfig() {
+      return {
+        sectionId: document.getElementById('section-select').value,
+        identifier: document.getElementById('identifier').value.trim(),
+        minWidth: parseInt(document.getElementById('min-width').value, 10),
+        maxWidth: parseInt(document.getElementById('max-width').value, 10),
+        minHeight: parseInt(document.getElementById('min-height').value, 10),
+        maxHeight: parseInt(document.getElementById('max-height').value, 10),
+        yTolerance: parseInt(document.getElementById('y-tolerance').value, 10),
+        startingNumber: parseInt(document.getElementById('starting-number').value, 10),
+      };
     }
 
     const runBtn = document.getElementById('run-btn');
     const sectionSelect = document.getElementById('section-select');
 
     runBtn.addEventListener('click', () => {
-      const sectionId = sectionSelect.value;
-      if (!sectionId) return;
+      if (!validate()) return;
+      const config = getConfig();
+      if (!config.sectionId) return;
 
       runBtn.disabled = true;
       runBtn.textContent = 'Running…';
       document.getElementById('results').style.display = 'none';
       document.getElementById('no-slides-state').style.display = 'none';
 
-      sendMessage('run-numbering', {
-        config: { sectionId, ...DEFAULTS },
-      });
+      sendMessage('run-numbering', { config });
     });
 
     window.onmessage = (event) => {
@@ -190,12 +337,11 @@
       switch (msg.type) {
 
         case 'sections-list': {
-          const select = document.getElementById('section-select');
           msg.sections.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
             opt.textContent = s.name;
-            select.appendChild(opt);
+            sectionSelect.appendChild(opt);
           });
           runBtn.disabled = false;
           break;
@@ -215,11 +361,13 @@
           if (r.totalSlides === 0 && r.errors.length === 0) {
             const el = document.getElementById('no-slides-state');
             if (r.diagnosticSizes && r.diagnosticSizes.length > 0) {
-              el.textContent = `No slides found. Sizes seen in section: ${r.diagnosticSizes.join(', ')}`;
+              el.textContent = `No slides found. Sizes in section: ${r.diagnosticSizes.join(', ')} — adjust the width/height range above.`;
             } else {
-              el.textContent = 'No slides found matching the current size filter.';
+              el.textContent = 'No slides found. The section appears to be empty.';
             }
             el.style.display = 'block';
+            // Auto-open advanced settings to help the user fix it
+            if (!advancedOpen) advancedToggle.click();
             break;
           }
 
