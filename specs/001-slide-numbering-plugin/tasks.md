@@ -80,9 +80,9 @@
 
 ### Implementation for User Story 3
 
-- [ ] T016 [US3] Enhance results display in ui.html: scrollable results log showing per-slide details (slide name, assigned number, status) in figma-slide-numbering/ui.html
-- [ ] T017 [US3] Add error reporting in ui.html: list failed slides with slide name, attempted page number, and error description per FR-009 in figma-slide-numbering/ui.html
-- [ ] T018 [US3] Update NumberingResult in code.js to include per-slide details (name + assigned number) for the results log in figma-slide-numbering/code.js
+- [X] T016 [US3] Enhance results display in ui.html: scrollable results log showing per-slide details (slide name, assigned number, status) in figma-slide-numbering/ui.html
+- [X] T017 [US3] Add error reporting in ui.html: list failed slides with slide name, attempted page number, and error description per FR-009 in figma-slide-numbering/ui.html
+- [X] T018 [US3] Update NumberingResult in code.js to include per-slide details (name + assigned number) for the results log in figma-slide-numbering/code.js
 
 **Checkpoint**: Results log shows full breakdown. Errors (if any) show slide name and failure reason.
 
@@ -92,11 +92,11 @@
 
 **Purpose**: Edge cases, empty states, and final quality
 
-- [ ] T019 Handle edge case: zero slides matching filter — show "No slides found matching the current size filter" in figma-slide-numbering/code.js
-- [ ] T020 Handle edge case: section with only covers — report "0 updated, N skipped" in figma-slide-numbering/code.js
-- [ ] T021 [P] Add empty state message when current page has no sections per FR-011 in figma-slide-numbering/ui.html
-- [ ] T022 [P] Style polish: consistent spacing, font sizes, dark theme alignment with Figma UI in figma-slide-numbering/ui.html
-- [ ] T023 Run quickstart.md validation: import plugin, test with real Section 1 data (96 slides), verify numbers 1–96
+- [X] T019 Handle edge case: zero slides matching filter — show "No slides found matching the current size filter" in figma-slide-numbering/code.js
+- [X] T020 Handle edge case: section with only covers — report "0 updated, N skipped" in figma-slide-numbering/code.js
+- [X] T021 [P] Add empty state message when current page has no sections per FR-011 in figma-slide-numbering/ui.html
+- [X] T022 [P] Style polish: consistent spacing, font sizes, dark theme alignment with Figma UI in figma-slide-numbering/ui.html
+- [X] T023 Run quickstart.md validation: import plugin, test with real Section 1 data (96 slides), verify numbers 1–96
 
 ---
 

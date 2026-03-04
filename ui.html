@@ -11,33 +11,89 @@
       line-height: 16px;
       color: var(--figma-color-text);
       background: var(--figma-color-bg);
-      padding: 12px;
-    }
-
-    #app {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      min-height: 100vh;
     }
 
+    /* ── Main scroll area ─────────────────────────────────── */
+    #app {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 12px 12px 8px;
+      overflow-y: auto;
+    }
+
+    /* ── Header ──────────────────────────────────────────── */
+    .plugin-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--figma-color-border);
+    }
+
+    .plugin-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--figma-color-bg-brand);
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .plugin-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--figma-color-text);
+      line-height: 16px;
+    }
+
+    .plugin-subtitle {
+      font-size: 10px;
+      color: var(--figma-color-text-secondary);
+      margin-top: 1px;
+      line-height: 14px;
+    }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .card {
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    /* ── Labels ──────────────────────────────────────────── */
     label {
-      font-size: 11px;
-      font-weight: 500;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
       color: var(--figma-color-text-secondary);
       display: block;
       margin-bottom: 4px;
     }
 
+    /* ── Inputs ──────────────────────────────────────────── */
     select, input[type="text"], input[type="number"] {
       width: 100%;
-      height: 28px;
-      padding: 0 8px;
+      height: 30px;
+      padding: 0 10px;
       font-size: 11px;
       font-family: inherit;
       color: var(--figma-color-text);
       background: var(--figma-color-bg);
-      border: 1px solid var(--figma-color-border);
-      border-radius: 4px;
+      border: 1.5px solid var(--figma-color-border);
+      border-radius: 7px;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
     select {
@@ -45,15 +101,16 @@
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 8px center;
+      background-position: right 10px center;
+      padding-right: 28px;
     }
 
     select:focus, input:focus {
       outline: none;
-      border-color: var(--figma-color-border-strong);
+      border-color: var(--figma-color-bg-brand);
+      box-shadow: 0 0 0 2px color-mix(in srgb, var(--figma-color-bg-brand) 15%, transparent);
     }
 
-    /* Fix m5: use Figma danger color variable instead of hardcoded #f24822 */
     input.invalid {
       border-color: var(--figma-color-text-danger, #f24822);
     }
@@ -61,127 +118,302 @@
     .range-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
+      gap: 8px;
     }
 
-    .range-row .field { display: flex; flex-direction: column; gap: 4px; }
+    .range-row .field { display: flex; flex-direction: column; }
 
-    #advanced-toggle {
-      background: none;
-      border: none;
-      padding: 0;
-      font-size: 11px;
-      font-family: inherit;
+    .field-hint {
+      font-size: 10px;
       color: var(--figma-color-text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    #advanced-toggle:hover { color: var(--figma-color-text); }
-
-    #advanced-body {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    button#run-btn {
-      width: 100%;
-      height: 32px;
-      font-size: 11px;
-      font-family: inherit;
-      font-weight: 600;
-      color: var(--figma-color-text-onbrand);
-      background: var(--figma-color-bg-brand);
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    button#run-btn:hover  { background: var(--figma-color-bg-brand-hover); }
-    button#run-btn:active { background: var(--figma-color-bg-brand-pressed); }
-    button#run-btn:disabled {
-      background: var(--figma-color-bg-disabled);
-      color: var(--figma-color-text-disabled);
-      cursor: not-allowed;
+      margin-top: 4px;
+      line-height: 14px;
     }
 
     .validation-error {
       color: var(--figma-color-text-danger, #f24822);
       font-size: 10px;
-      margin-top: 2px;
+      margin-top: 3px;
     }
 
+    /* ── Advanced toggle ─────────────────────────────────── */
+    #advanced-toggle {
+      width: 100%;
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 8px;
+      padding: 7px 11px;
+      font-size: 11px;
+      font-family: inherit;
+      font-weight: 500;
+      color: var(--figma-color-text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    #advanced-toggle:hover {
+      color: var(--figma-color-text);
+      border-color: var(--figma-color-border-strong);
+      background: var(--figma-color-bg-tertiary, rgba(0,0,0,0.05));
+    }
+
+    .toggle-chevron {
+      font-size: 9px;
+      transition: transform 0.2s ease;
+      display: inline-block;
+      opacity: 0.6;
+    }
+
+    #advanced-body {
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 12px;
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 8px;
+    }
+
+    /* ── Run button ──────────────────────────────────────── */
+    button#run-btn {
+      width: 100%;
+      height: 38px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--figma-color-text-onbrand);
+      background: var(--figma-color-bg-brand);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--figma-color-bg-brand) 30%, transparent);
+    }
+
+    button#run-btn:hover {
+      background: var(--figma-color-bg-brand-hover);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--figma-color-bg-brand) 40%, transparent);
+    }
+
+    button#run-btn:active {
+      background: var(--figma-color-bg-brand-pressed);
+      transform: scale(0.99);
+      box-shadow: none;
+    }
+
+    button#run-btn:disabled {
+      background: var(--figma-color-bg-disabled);
+      color: var(--figma-color-text-disabled);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* ── Empty / no-slides states ────────────────────────── */
+    #empty-state, #no-slides-state {
+      font-size: 11px;
+      color: var(--figma-color-text-secondary);
+      text-align: center;
+      padding: 14px 12px;
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 10px;
+      line-height: 16px;
+    }
+
+    /* ── Results card ────────────────────────────────────── */
     #results {
       display: none;
       flex-direction: column;
-      gap: 4px;
-      border-top: 1px solid var(--figma-color-border);
-      padding-top: 12px;
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-bottom: 1px solid var(--figma-color-border);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--figma-color-text-secondary);
+    }
+
+    .results-body {
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
     }
 
     .result-row {
       display: flex;
       justify-content: space-between;
+      align-items: baseline;
     }
 
-    .result-label { color: var(--figma-color-text-secondary); }
-    .result-value { font-weight: 600; }
+    .result-label { color: var(--figma-color-text-secondary); font-size: 11px; }
+    .result-value { font-weight: 700; font-size: 11px; }
     .result-value.error { color: var(--figma-color-text-danger, #f24822); }
-
-    #empty-state, #no-slides-state {
-      font-size: 11px;
-      color: var(--figma-color-text-secondary);
-      text-align: center;
-      padding: 16px 0;
-    }
 
     #error-list {
       margin-top: 4px;
-      border-top: 1px solid var(--figma-color-border);
       padding-top: 8px;
+      border-top: 1px solid var(--figma-color-border);
     }
 
     .error-item {
       color: var(--figma-color-text-danger, #f24822);
       margin-bottom: 4px;
+      font-size: 10px;
+      line-height: 14px;
     }
+
+    /* ── Slide details log ───────────────────────────────── */
+    #slide-log-section {
+      border-top: 1px solid var(--figma-color-border);
+      padding: 8px 12px 10px;
+    }
+
+    #slide-log-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--figma-color-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+
+    #slide-log { max-height: 130px; overflow-y: auto; }
+
+    #slide-log::-webkit-scrollbar { width: 3px; }
+    #slide-log::-webkit-scrollbar-track { background: transparent; }
+    #slide-log::-webkit-scrollbar-thumb { background: var(--figma-color-border-strong); border-radius: 2px; }
+
+    .log-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 0;
+      min-width: 0;
+      border-bottom: 1px solid var(--figma-color-border);
+    }
+
+    .log-row:last-child { border-bottom: none; }
+
+    .log-name {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--figma-color-text);
+      font-size: 10px;
+    }
+
+    .log-num {
+      flex-shrink: 0;
+      font-variant-numeric: tabular-nums;
+      color: var(--figma-color-text-secondary);
+      font-size: 10px;
+      min-width: 28px;
+      text-align: right;
+    }
+
+    .log-status { flex-shrink: 0; font-size: 10px; min-width: 32px; text-align: right; }
+    .log-status.updated { color: var(--figma-color-text-success, #14ae5c); }
+    .log-status.cover   { color: var(--figma-color-text-secondary); }
+    .log-status.error   { color: var(--figma-color-text-danger, #f24822); }
+
+    /* ── Footer ──────────────────────────────────────────── */
+    footer {
+      padding: 8px 12px 12px;
+      text-align: center;
+      font-size: 10px;
+      color: var(--figma-color-text-secondary);
+      border-top: 1px solid var(--figma-color-border);
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    footer a {
+      color: var(--figma-color-text-secondary);
+      text-decoration: none;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    footer a:hover { color: var(--figma-color-text); text-decoration: underline; }
   </style>
 </head>
 <body>
   <div id="app">
 
-    <!-- Section selector -->
-    <div>
-      <label for="section-select">Section</label>
-      <select id="section-select"></select>
-      <p id="empty-state" style="display:none;">No sections found on this page.</p>
+    <!-- Header -->
+    <header class="plugin-header">
+      <div class="plugin-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="3" width="14" height="12" rx="2" fill="white" opacity="0.95"/>
+          <rect x="5" y="6.5" width="4" height="1.5" rx="0.75" fill="#1a73e8" opacity="0.7"/>
+          <rect x="5" y="9.5" width="8" height="1" rx="0.5" fill="#1a73e8" opacity="0.4"/>
+          <rect x="5" y="11.5" width="6" height="1" rx="0.5" fill="#1a73e8" opacity="0.25"/>
+        </svg>
+      </div>
+      <div>
+        <div class="plugin-title">Slide Numbering</div>
+        <div class="plugin-subtitle">Auto-number your presentation slides</div>
+      </div>
+    </header>
+
+    <!-- Primary controls card -->
+    <div class="card">
+
+      <div>
+        <label for="section-select">Section</label>
+        <select id="section-select"></select>
+        <p class="field-hint">Slides must be direct children of this section</p>
+        <p id="empty-state" style="display:none;">No sections found on this page.</p>
+      </div>
+
+      <div>
+        <label for="identifier">Page number identifier</label>
+        <input type="text" id="identifier" value="{p#}" />
+        <p class="field-hint">Text layer name must contain this string</p>
+      </div>
+
     </div>
 
-    <!-- Advanced config (collapsible) -->
+    <!-- Advanced settings (collapsible) -->
     <div>
-      <button id="advanced-toggle" type="button">&#9654; Advanced settings</button>
-      <div id="advanced-body" style="display:none; margin-top:10px;">
-
-        <div>
-          <label for="identifier">Page number identifier</label>
-          <input type="text" id="identifier" value="{p#}" />
-        </div>
+      <button id="advanced-toggle" type="button">
+        <span>Advanced settings</span>
+        <span class="toggle-chevron">▶</span>
+      </button>
+      <div id="advanced-body" style="display:none;">
 
         <div>
           <label>Width range (px)</label>
           <div class="range-row">
             <div class="field">
-              <label for="min-width" style="font-weight:400;">Min</label>
+              <label for="min-width" style="font-weight:400;text-transform:none;letter-spacing:0;">Min</label>
               <input type="number" id="min-width" value="1900" min="1" step="1" />
             </div>
             <div class="field">
-              <label for="max-width" style="font-weight:400;">Max</label>
+              <label for="max-width" style="font-weight:400;text-transform:none;letter-spacing:0;">Max</label>
               <input type="number" id="max-width" value="1950" min="1" step="1" />
             </div>
           </div>
+          <p class="field-hint">Filters frames by width — default matches 1920px slides</p>
           <p class="validation-error" id="width-error" style="display:none;"></p>
         </div>
 
@@ -189,14 +421,15 @@
           <label>Height range (px)</label>
           <div class="range-row">
             <div class="field">
-              <label for="min-height" style="font-weight:400;">Min</label>
+              <label for="min-height" style="font-weight:400;text-transform:none;letter-spacing:0;">Min</label>
               <input type="number" id="min-height" value="1070" min="1" step="1" />
             </div>
             <div class="field">
-              <label for="max-height" style="font-weight:400;">Max</label>
+              <label for="max-height" style="font-weight:400;text-transform:none;letter-spacing:0;">Max</label>
               <input type="number" id="max-height" value="1090" min="1" step="1" />
             </div>
           </div>
+          <p class="field-hint">Filters frames by height — default matches 1080px slides</p>
           <p class="validation-error" id="height-error" style="display:none;"></p>
         </div>
 
@@ -204,10 +437,12 @@
           <div class="field">
             <label for="y-tolerance">Y tolerance (px)</label>
             <input type="number" id="y-tolerance" value="50" min="0" step="1" />
+            <p class="field-hint">Max Y gap for same row</p>
           </div>
           <div class="field">
             <label for="starting-number">Starting number</label>
             <input type="number" id="starting-number" value="1" min="0" step="1" />
+            <p class="field-hint">First page number</p>
           </div>
         </div>
 
@@ -215,63 +450,78 @@
     </div>
 
     <!-- Run button -->
-    <button id="run-btn" disabled>Run</button>
+    <button id="run-btn" disabled>Number Slides</button>
 
-    <!-- No slides found state -->
+    <!-- No slides found -->
     <p id="no-slides-state" style="display:none;"></p>
 
-    <!-- Results summary (Fix m2: "Covers (no label)" instead of misleading "Covers skipped") -->
+    <!-- Results card -->
     <div id="results">
-      <div class="result-row">
-        <span class="result-label">Total slides</span>
-        <span class="result-value" id="res-total">—</span>
+      <div class="results-header">Results</div>
+      <div class="results-body">
+        <div class="result-row">
+          <span class="result-label">Total slides</span>
+          <span class="result-value" id="res-total">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Updated</span>
+          <span class="result-value" id="res-updated">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Covers (no label)</span>
+          <span class="result-value" id="res-skipped">—</span>
+        </div>
+        <div class="result-row">
+          <span class="result-label">Errors</span>
+          <span class="result-value" id="res-errors">—</span>
+        </div>
+        <div id="error-list" style="display:none;"></div>
       </div>
-      <div class="result-row">
-        <span class="result-label">Updated</span>
-        <span class="result-value" id="res-updated">—</span>
+      <div id="slide-log-section" style="display:none;">
+        <div id="slide-log-label">Slide details</div>
+        <div id="slide-log"></div>
       </div>
-      <div class="result-row">
-        <span class="result-label">Covers (no label)</span>
-        <span class="result-value" id="res-skipped">—</span>
-      </div>
-      <div class="result-row">
-        <span class="result-label">Errors</span>
-        <span class="result-value" id="res-errors">—</span>
-      </div>
-      <div id="error-list" style="display:none;"></div>
     </div>
 
   </div>
+
+  <!-- Footer -->
+  <footer>
+    Made with ❤️ by <a id="author-link" href="#">Gamal Eldien</a>
+  </footer>
 
   <script>
     function sendMessage(type, payload) {
       parent.postMessage({ pluginMessage: { type, ...payload } }, '*');
     }
 
-    // Advanced toggle
+    // Footer link → opens gamaleldien.com via code.js
+    document.getElementById('author-link').addEventListener('click', (e) => {
+      e.preventDefault();
+      sendMessage('open-url', { url: 'https://gamaleldien.com/' });
+    });
+
+    // Advanced toggle with animated chevron
     const advancedToggle = document.getElementById('advanced-toggle');
     const advancedBody = document.getElementById('advanced-body');
+    const chevron = advancedToggle.querySelector('.toggle-chevron');
     let advancedOpen = false;
     advancedToggle.addEventListener('click', () => {
       advancedOpen = !advancedOpen;
       advancedBody.style.display = advancedOpen ? 'flex' : 'none';
-      advancedToggle.innerHTML = (advancedOpen ? '&#9660;' : '&#9654;') + ' Advanced settings';
+      chevron.style.transform = advancedOpen ? 'rotate(90deg)' : '';
     });
 
-    // Fix C2 + m7: safe integer parsing with NaN and negative checks
     function safeInt(id, fallback, allowZero) {
       const val = parseInt(document.getElementById(id).value, 10);
-      if (isNaN(val)) return null; // signal invalid
+      if (isNaN(val)) return null;
       if (!allowZero && val < 1) return null;
       if (allowZero && val < 0) return null;
       return val;
     }
 
-    // T015: Input validation (Fix C2: NaN checks, Fix m7: negative/decimal rejection)
     function validate() {
       let valid = true;
-
-      // Clear all previous errors
       document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
       document.querySelectorAll('.validation-error').forEach(el => { el.style.display = 'none'; el.textContent = ''; });
 
@@ -330,7 +580,6 @@
       return valid;
     }
 
-    // T013: Build PluginConfig from form values
     function getConfig() {
       return {
         sectionId: document.getElementById('section-select').value,
@@ -351,12 +600,10 @@
       if (!validate()) return;
       const config = getConfig();
       if (!config.sectionId) return;
-
       runBtn.disabled = true;
       runBtn.textContent = 'Running\u2026';
       document.getElementById('results').style.display = 'none';
       document.getElementById('no-slides-state').style.display = 'none';
-
       sendMessage('run-numbering', { config });
     });
 
@@ -366,7 +613,6 @@
 
       switch (msg.type) {
 
-        // Fix M1: clear dropdown before populating to prevent duplicates
         case 'sections-list': {
           sectionSelect.innerHTML = '';
           msg.sections.forEach(s => {
@@ -388,7 +634,7 @@
         case 'numbering-complete': {
           const r = msg.result;
           runBtn.disabled = false;
-          runBtn.textContent = 'Run';
+          runBtn.textContent = 'Number Slides';
 
           if (r.totalSlides === 0 && r.errors.length === 0) {
             const el = document.getElementById('no-slides-state');
@@ -424,6 +670,33 @@
             errorList.style.display = 'none';
           }
 
+          const slideLogSection = document.getElementById('slide-log-section');
+          const slideLog = document.getElementById('slide-log');
+          if (r.slideDetails && r.slideDetails.length > 0) {
+            slideLog.innerHTML = '';
+            r.slideDetails.forEach(d => {
+              const row = document.createElement('div');
+              row.className = 'log-row';
+              const name = document.createElement('span');
+              name.className = 'log-name';
+              name.textContent = d.name;
+              name.title = d.name;
+              const num = document.createElement('span');
+              num.className = 'log-num';
+              num.textContent = d.status !== 'cover' ? 'p.' + d.pageNumber : '—';
+              const status = document.createElement('span');
+              status.className = 'log-status ' + d.status;
+              status.textContent = d.status === 'updated' ? '✓' : d.status === 'cover' ? 'cover' : '✗';
+              row.appendChild(name);
+              row.appendChild(num);
+              row.appendChild(status);
+              slideLog.appendChild(row);
+            });
+            slideLogSection.style.display = 'block';
+          } else {
+            slideLogSection.style.display = 'none';
+          }
+
           document.getElementById('results').style.display = 'flex';
           break;
         }
@@ -433,7 +706,6 @@
       }
     };
 
-    // Request sections on load
     sendMessage('get-sections');
   </script>
 </body>
