@@ -111,7 +111,7 @@ async function numberSlides(slides, config) {
         await figma.loadFontAsync(pNode.fontName);
       }
 
-      pNode.characters = String(pageNum);
+      pNode.characters = config.zeroPadded && pageNum < 10 ? '0' + pageNum : String(pageNum);
       result.updated++;
       result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'updated' });
     } catch (err) {
@@ -130,6 +130,19 @@ async function numberSlides(slides, config) {
 // ---------------------------------------------------------------------------
 figma.ui.onmessage = async (msg) => {
   switch (msg.type) {
+
+    // 003: Onboarding state — read from clientStorage
+    case 'get-onboarding-state': {
+      const val = await figma.clientStorage.getAsync('onboardingSeen');
+      figma.ui.postMessage({ type: 'onboarding-state', hasSeen: !!val });
+      break;
+    }
+
+    // 003: Persist onboarding dismissed state
+    case 'set-onboarding-seen': {
+      await figma.clientStorage.setAsync('onboardingSeen', true);
+      break;
+    }
 
     case 'get-sections': {
       const sections = figma.currentPage.children

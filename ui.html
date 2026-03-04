@@ -16,8 +16,91 @@
       min-height: 100vh;
     }
 
+    /* ── Views — both start hidden; JS shows the correct one ─ */
+    #onboarding-view, #main-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    /* ── Onboarding view ──────────────────────────────────── */
+    #onboarding-view {
+      padding: 16px;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .onboarding-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .onboarding-section h3 {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--figma-color-text);
+    }
+
+    .onboarding-section p {
+      font-size: 11px;
+      color: var(--figma-color-text-secondary);
+      line-height: 16px;
+    }
+
+    .onboarding-example {
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+      font-size: 10px;
+      line-height: 16px;
+      color: var(--figma-color-text);
+      white-space: pre;
+    }
+
+    .onboarding-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 4px;
+      max-width: 160px;
+    }
+
+    .onboarding-grid span {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
+      border: 1px solid var(--figma-color-border);
+      border-radius: 4px;
+      height: 28px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--figma-color-text);
+    }
+
+    button#got-it-btn {
+      width: 100%;
+      height: 38px;
+      font-size: 12px;
+      font-family: inherit;
+      font-weight: 700;
+      color: var(--figma-color-text-onbrand);
+      background: var(--figma-color-bg-brand);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      margin-top: auto;
+      transition: background 0.15s ease;
+    }
+
+    button#got-it-btn:hover {
+      background: var(--figma-color-bg-brand-hover);
+    }
+
     /* ── Main scroll area ─────────────────────────────────── */
-    #app {
+    #main-view > #app {
       flex: 1;
       display: flex;
       flex-direction: column;
@@ -33,6 +116,38 @@
       gap: 10px;
       padding-bottom: 12px;
       border-bottom: 1px solid var(--figma-color-border);
+    }
+
+    /* ── Help button ────────────────────────────────────── */
+    #help-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid var(--figma-color-border);
+      background: var(--figma-color-bg-tertiary, rgba(0,0,0,0.03));
+      color: var(--figma-color-text-secondary);
+      font-size: 11px;
+      font-weight: 700;
+      font-family: inherit;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+      padding: 0;
+    }
+
+    #help-btn:hover {
+      color: var(--figma-color-text);
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.05));
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+
+    #help-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      box-shadow: none;
     }
 
     .plugin-icon {
@@ -134,6 +249,46 @@
       color: var(--figma-color-text-danger, #f24822);
       font-size: 10px;
       margin-top: 3px;
+    }
+
+    /* ── Number format toggle ──────────────────────────────── */
+    .format-toggle {
+      display: flex;
+    }
+
+    .fmt-btn {
+      flex: 1;
+      height: 28px;
+      padding: 0 10px;
+      font-size: 11px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid var(--figma-color-border);
+      background: var(--figma-color-bg);
+      color: var(--figma-color-text-secondary);
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .fmt-btn:first-child {
+      border-radius: 6px 0 0 6px;
+      border-right: none;
+    }
+
+    .fmt-btn:last-child {
+      border-radius: 0 6px 6px 0;
+    }
+
+    .fmt-btn.active {
+      background: var(--figma-color-bg-brand);
+      color: var(--figma-color-text-onbrand);
+      border-color: var(--figma-color-bg-brand);
+      font-weight: 600;
+    }
+
+    .fmt-btn:not(.active):hover {
+      background: var(--figma-color-bg-tertiary, rgba(0,0,0,0.03));
+      color: var(--figma-color-text);
     }
 
     /* ── Advanced toggle ─────────────────────────────────── */
@@ -357,6 +512,54 @@
   </style>
 </head>
 <body>
+
+  <!-- Onboarding view — shown on first launch, hidden after dismiss -->
+  <div id="onboarding-view">
+    <header class="plugin-header">
+      <div class="plugin-icon">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect x="2" y="3" width="14" height="12" rx="2" fill="white" opacity="0.95"/>
+          <rect x="5" y="6.5" width="4" height="1.5" rx="0.75" fill="#1a73e8" opacity="0.7"/>
+          <rect x="5" y="9.5" width="8" height="1" rx="0.5" fill="#1a73e8" opacity="0.4"/>
+          <rect x="5" y="11.5" width="6" height="1" rx="0.5" fill="#1a73e8" opacity="0.25"/>
+        </svg>
+      </div>
+      <div>
+        <div class="plugin-title">Slide Numbering</div>
+        <div class="plugin-subtitle">Quick start guide</div>
+      </div>
+    </header>
+
+    <div class="onboarding-section">
+      <h3>What this plugin does</h3>
+      <p>Automatically assigns page numbers to slides in a Figma section. Just add a text layer with a special name to each slide, and the plugin writes the numbers for you.</p>
+    </div>
+
+    <div class="onboarding-section">
+      <h3>Setting up the page number layer</h3>
+      <p>Inside each slide frame, create a <strong>Text layer</strong> and name it so it contains <strong>{p#}</strong>. The plugin will find it and replace the text with the page number.</p>
+      <div class="onboarding-example">Slide 01 (Frame)
+├── Background
+├── Title
+└── {p#}  ← name your text layer this</div>
+      <p>Slides without a <strong>{p#}</strong> layer are skipped (great for covers and dividers).</p>
+    </div>
+
+    <div class="onboarding-section">
+      <h3>Reading order</h3>
+      <p>Slides are numbered <strong>left-to-right</strong> within each row, and rows are processed <strong>top-to-bottom</strong>:</p>
+      <div class="onboarding-grid">
+        <span>1</span><span>2</span><span>3</span>
+        <span>4</span><span>5</span><span>6</span>
+        <span>7</span><span>8</span><span>9</span>
+      </div>
+    </div>
+
+    <button id="got-it-btn">Got it</button>
+  </div>
+
+  <!-- Main view — the normal plugin UI -->
+  <div id="main-view">
   <div id="app">
 
     <!-- Header -->
@@ -369,10 +572,11 @@
           <rect x="5" y="11.5" width="6" height="1" rx="0.5" fill="#1a73e8" opacity="0.25"/>
         </svg>
       </div>
-      <div>
+      <div style="flex:1;">
         <div class="plugin-title">Slide Numbering</div>
         <div class="plugin-subtitle">Auto-number your presentation slides</div>
       </div>
+      <button id="help-btn" title="How it works">?</button>
     </header>
 
     <!-- Primary controls card -->
@@ -389,6 +593,14 @@
         <label for="identifier">Page number identifier</label>
         <input type="text" id="identifier" value="{p#}" />
         <p class="field-hint">Text layer name must contain this string</p>
+      </div>
+
+      <div>
+        <label>Number format</label>
+        <div class="format-toggle">
+          <button type="button" id="fmt-plain" class="fmt-btn active">1, 2, 3</button>
+          <button type="button" id="fmt-padded" class="fmt-btn">01, 02, 03</button>
+        </div>
       </div>
 
     </div>
@@ -489,16 +701,57 @@
   <footer>
     Made with ❤️ by <a id="author-link" href="#">Gamal Eldien</a>
   </footer>
+  </div><!-- /main-view -->
 
   <script>
     function sendMessage(type, payload) {
       parent.postMessage({ pluginMessage: { type, ...payload } }, '*');
     }
 
+    // ── View-swap logic ──────────────────────────────────
+    let hasSeen = false;
+    const onboardingView = document.getElementById('onboarding-view');
+    const mainView = document.getElementById('main-view');
+
+    function showView(viewId) {
+      onboardingView.style.display = viewId === 'onboarding-view' ? 'flex' : 'none';
+      mainView.style.display = viewId === 'main-view' ? 'flex' : 'none';
+    }
+
+    // "Got it" dismiss button
+    document.getElementById('got-it-btn').addEventListener('click', () => {
+      if (!hasSeen) {
+        sendMessage('set-onboarding-seen');
+        hasSeen = true;
+      }
+      showView('main-view');
+    });
+
+    // Help button — re-opens onboarding from main view
+    const helpBtn = document.getElementById('help-btn');
+    helpBtn.addEventListener('click', () => {
+      showView('onboarding-view');
+    });
+
     // Footer link → opens gamaleldien.com via code.js
     document.getElementById('author-link').addEventListener('click', (e) => {
       e.preventDefault();
       sendMessage('open-url', { url: 'https://gamaleldien.com/' });
+    });
+
+    // Number format toggle
+    let zeroPadded = false;
+    const fmtPlain = document.getElementById('fmt-plain');
+    const fmtPadded = document.getElementById('fmt-padded');
+    fmtPlain.addEventListener('click', () => {
+      zeroPadded = false;
+      fmtPlain.classList.add('active');
+      fmtPadded.classList.remove('active');
+    });
+    fmtPadded.addEventListener('click', () => {
+      zeroPadded = true;
+      fmtPadded.classList.add('active');
+      fmtPlain.classList.remove('active');
     });
 
     // Advanced toggle with animated chevron
@@ -590,6 +843,7 @@
         maxHeight: parseInt(document.getElementById('max-height').value, 10),
         yTolerance: parseInt(document.getElementById('y-tolerance').value, 10),
         startingNumber: parseInt(document.getElementById('starting-number').value, 10),
+        zeroPadded: zeroPadded,
       };
     }
 
@@ -601,6 +855,7 @@
       const config = getConfig();
       if (!config.sectionId) return;
       runBtn.disabled = true;
+      helpBtn.disabled = true;
       runBtn.textContent = 'Running\u2026';
       document.getElementById('results').style.display = 'none';
       document.getElementById('no-slides-state').style.display = 'none';
@@ -612,6 +867,12 @@
       if (!msg) return;
 
       switch (msg.type) {
+
+        case 'onboarding-state': {
+          hasSeen = !!msg.hasSeen;
+          showView(hasSeen ? 'main-view' : 'onboarding-view');
+          break;
+        }
 
         case 'sections-list': {
           sectionSelect.innerHTML = '';
@@ -634,6 +895,7 @@
         case 'numbering-complete': {
           const r = msg.result;
           runBtn.disabled = false;
+          helpBtn.disabled = false;
           runBtn.textContent = 'Number Slides';
 
           if (r.totalSlides === 0 && r.errors.length === 0) {
@@ -706,6 +968,7 @@
       }
     };
 
+    sendMessage('get-onboarding-state');
     sendMessage('get-sections');
   </script>
 </body>
