@@ -53,11 +53,11 @@
       border-color: var(--figma-color-border-strong);
     }
 
+    /* Fix m5: use Figma danger color variable instead of hardcoded #f24822 */
     input.invalid {
-      border-color: #f24822;
+      border-color: var(--figma-color-text-danger, #f24822);
     }
 
-    /* Two-column range row */
     .range-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -66,7 +66,6 @@
 
     .range-row .field { display: flex; flex-direction: column; gap: 4px; }
 
-    /* Collapsible advanced section */
     #advanced-toggle {
       background: none;
       border: none;
@@ -110,7 +109,7 @@
     }
 
     .validation-error {
-      color: #f24822;
+      color: var(--figma-color-text-danger, #f24822);
       font-size: 10px;
       margin-top: 2px;
     }
@@ -130,7 +129,7 @@
 
     .result-label { color: var(--figma-color-text-secondary); }
     .result-value { font-weight: 600; }
-    .result-value.error { color: #f24822; }
+    .result-value.error { color: var(--figma-color-text-danger, #f24822); }
 
     #empty-state, #no-slides-state {
       font-size: 11px;
@@ -146,7 +145,7 @@
     }
 
     .error-item {
-      color: #f24822;
+      color: var(--figma-color-text-danger, #f24822);
       margin-bottom: 4px;
     }
   </style>
@@ -163,7 +162,7 @@
 
     <!-- Advanced config (collapsible) -->
     <div>
-      <button id="advanced-toggle" type="button">▶ Advanced settings</button>
+      <button id="advanced-toggle" type="button">&#9654; Advanced settings</button>
       <div id="advanced-body" style="display:none; margin-top:10px;">
 
         <div>
@@ -176,14 +175,14 @@
           <div class="range-row">
             <div class="field">
               <label for="min-width" style="font-weight:400;">Min</label>
-              <input type="number" id="min-width" value="1900" min="1" />
+              <input type="number" id="min-width" value="1900" min="1" step="1" />
             </div>
             <div class="field">
               <label for="max-width" style="font-weight:400;">Max</label>
-              <input type="number" id="max-width" value="1950" min="1" />
+              <input type="number" id="max-width" value="1950" min="1" step="1" />
             </div>
           </div>
-          <p class="validation-error" id="width-error" style="display:none;">Min must be ≤ Max</p>
+          <p class="validation-error" id="width-error" style="display:none;"></p>
         </div>
 
         <div>
@@ -191,24 +190,24 @@
           <div class="range-row">
             <div class="field">
               <label for="min-height" style="font-weight:400;">Min</label>
-              <input type="number" id="min-height" value="1070" min="1" />
+              <input type="number" id="min-height" value="1070" min="1" step="1" />
             </div>
             <div class="field">
               <label for="max-height" style="font-weight:400;">Max</label>
-              <input type="number" id="max-height" value="1090" min="1" />
+              <input type="number" id="max-height" value="1090" min="1" step="1" />
             </div>
           </div>
-          <p class="validation-error" id="height-error" style="display:none;">Min must be ≤ Max</p>
+          <p class="validation-error" id="height-error" style="display:none;"></p>
         </div>
 
         <div class="range-row">
           <div class="field">
             <label for="y-tolerance">Y tolerance (px)</label>
-            <input type="number" id="y-tolerance" value="50" min="0" />
+            <input type="number" id="y-tolerance" value="50" min="0" step="1" />
           </div>
           <div class="field">
             <label for="starting-number">Starting number</label>
-            <input type="number" id="starting-number" value="1" min="0" />
+            <input type="number" id="starting-number" value="1" min="0" step="1" />
           </div>
         </div>
 
@@ -221,7 +220,7 @@
     <!-- No slides found state -->
     <p id="no-slides-state" style="display:none;"></p>
 
-    <!-- Results summary -->
+    <!-- Results summary (Fix m2: "Covers (no label)" instead of misleading "Covers skipped") -->
     <div id="results">
       <div class="result-row">
         <span class="result-label">Total slides</span>
@@ -232,7 +231,7 @@
         <span class="result-value" id="res-updated">—</span>
       </div>
       <div class="result-row">
-        <span class="result-label">Covers skipped</span>
+        <span class="result-label">Covers (no label)</span>
         <span class="result-value" id="res-skipped">—</span>
       </div>
       <div class="result-row">
@@ -256,46 +255,77 @@
     advancedToggle.addEventListener('click', () => {
       advancedOpen = !advancedOpen;
       advancedBody.style.display = advancedOpen ? 'flex' : 'none';
-      advancedToggle.textContent = (advancedOpen ? '▼' : '▶') + ' Advanced settings';
+      advancedToggle.innerHTML = (advancedOpen ? '&#9660;' : '&#9654;') + ' Advanced settings';
     });
 
-    // T015: Input validation
+    // Fix C2 + m7: safe integer parsing with NaN and negative checks
+    function safeInt(id, fallback, allowZero) {
+      const val = parseInt(document.getElementById(id).value, 10);
+      if (isNaN(val)) return null; // signal invalid
+      if (!allowZero && val < 1) return null;
+      if (allowZero && val < 0) return null;
+      return val;
+    }
+
+    // T015: Input validation (Fix C2: NaN checks, Fix m7: negative/decimal rejection)
     function validate() {
       let valid = true;
 
-      const minW = parseInt(document.getElementById('min-width').value, 10);
-      const maxW = parseInt(document.getElementById('max-width').value, 10);
+      // Clear all previous errors
+      document.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+      document.querySelectorAll('.validation-error').forEach(el => { el.style.display = 'none'; el.textContent = ''; });
+
+      const minW = safeInt('min-width', null, false);
+      const maxW = safeInt('max-width', null, false);
       const widthErr = document.getElementById('width-error');
-      if (minW > maxW) {
+      if (minW === null || maxW === null) {
+        widthErr.textContent = 'Enter valid positive numbers.';
+        widthErr.style.display = 'block';
+        if (minW === null) document.getElementById('min-width').classList.add('invalid');
+        if (maxW === null) document.getElementById('max-width').classList.add('invalid');
+        valid = false;
+      } else if (minW > maxW) {
+        widthErr.textContent = 'Min must be \u2264 Max';
         widthErr.style.display = 'block';
         document.getElementById('min-width').classList.add('invalid');
         document.getElementById('max-width').classList.add('invalid');
         valid = false;
-      } else {
-        widthErr.style.display = 'none';
-        document.getElementById('min-width').classList.remove('invalid');
-        document.getElementById('max-width').classList.remove('invalid');
       }
 
-      const minH = parseInt(document.getElementById('min-height').value, 10);
-      const maxH = parseInt(document.getElementById('max-height').value, 10);
+      const minH = safeInt('min-height', null, false);
+      const maxH = safeInt('max-height', null, false);
       const heightErr = document.getElementById('height-error');
-      if (minH > maxH) {
+      if (minH === null || maxH === null) {
+        heightErr.textContent = 'Enter valid positive numbers.';
+        heightErr.style.display = 'block';
+        if (minH === null) document.getElementById('min-height').classList.add('invalid');
+        if (maxH === null) document.getElementById('max-height').classList.add('invalid');
+        valid = false;
+      } else if (minH > maxH) {
+        heightErr.textContent = 'Min must be \u2264 Max';
         heightErr.style.display = 'block';
         document.getElementById('min-height').classList.add('invalid');
         document.getElementById('max-height').classList.add('invalid');
         valid = false;
-      } else {
-        heightErr.style.display = 'none';
-        document.getElementById('min-height').classList.remove('invalid');
-        document.getElementById('max-height').classList.remove('invalid');
+      }
+
+      const yTol = safeInt('y-tolerance', null, true);
+      if (yTol === null) {
+        document.getElementById('y-tolerance').classList.add('invalid');
+        valid = false;
       }
 
       const identifier = document.getElementById('identifier').value.trim();
-      if (!identifier) valid = false;
+      if (!identifier) {
+        document.getElementById('identifier').classList.add('invalid');
+        valid = false;
+      }
 
-      const startingNumber = parseInt(document.getElementById('starting-number').value, 10);
-      if (isNaN(startingNumber) || startingNumber < 0) valid = false;
+      const startNum = safeInt('starting-number', null, true);
+      if (startNum === null) {
+        document.getElementById('starting-number').classList.add('invalid');
+        valid = false;
+      }
 
       return valid;
     }
@@ -323,7 +353,7 @@
       if (!config.sectionId) return;
 
       runBtn.disabled = true;
-      runBtn.textContent = 'Running…';
+      runBtn.textContent = 'Running\u2026';
       document.getElementById('results').style.display = 'none';
       document.getElementById('no-slides-state').style.display = 'none';
 
@@ -336,7 +366,9 @@
 
       switch (msg.type) {
 
+        // Fix M1: clear dropdown before populating to prevent duplicates
         case 'sections-list': {
+          sectionSelect.innerHTML = '';
           msg.sections.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.id;
@@ -361,12 +393,11 @@
           if (r.totalSlides === 0 && r.errors.length === 0) {
             const el = document.getElementById('no-slides-state');
             if (r.diagnosticSizes && r.diagnosticSizes.length > 0) {
-              el.textContent = `No slides found. Sizes in section: ${r.diagnosticSizes.join(', ')} — adjust the width/height range above.`;
+              el.textContent = 'No slides found. Sizes in section: ' + r.diagnosticSizes.join(', ') + ' \u2014 adjust the width/height range above.';
             } else {
               el.textContent = 'No slides found. The section appears to be empty.';
             }
             el.style.display = 'block';
-            // Auto-open advanced settings to help the user fix it
             if (!advancedOpen) advancedToggle.click();
             break;
           }
@@ -385,7 +416,7 @@
             r.errors.forEach(e => {
               const div = document.createElement('div');
               div.className = 'error-item';
-              div.textContent = `Slide "${e.slideName}" (p.${e.pageNumber}): ${e.message}`;
+              div.textContent = 'Slide "' + e.slideName + '" (p.' + e.pageNumber + '): ' + e.message;
               errorList.appendChild(div);
             });
             errorList.style.display = 'block';
