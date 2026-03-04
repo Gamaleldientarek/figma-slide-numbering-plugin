@@ -68,7 +68,18 @@ function findPageNumNode(node, identifier) {
 async function numberSlides(slides, config) {
   // T018: slideDetails carries per-slide info for the results log in ui.html
   const result = { totalSlides: slides.length, updated: 0, skipped: 0, errors: [], slideDetails: [] };
+  const countCovers = config.countCovers !== false; // default true for backward compat
   let pageNum = config.startingNumber - 1;
+
+  // T002: Pre-scan to count non-cover slides for zero-padding width calculation
+  let maxPageNum;
+  if (countCovers) {
+    maxPageNum = config.startingNumber + slides.length - 1;
+  } else {
+    const contentCount = slides.filter(s => findPageNumNode(s, config.identifier) !== null).length;
+    maxPageNum = config.startingNumber + contentCount - 1;
+  }
+  const padWidth = String(maxPageNum).length;
 
   // Cancellation support (M2)
   let cancelled = false;
@@ -87,14 +98,17 @@ async function numberSlides(slides, config) {
       break;
     }
 
-    pageNum++;
     const pNode = findPageNumNode(slide, config.identifier);
 
+    // T001/T003: When countCovers is false, covers don't consume a number
     if (!pNode) {
+      if (countCovers) pageNum++;
       result.skipped++;
-      result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'cover' });
+      result.slideDetails.push({ name: slide.name, pageNumber: countCovers ? pageNum : null, status: 'cover' });
       continue;
     }
+
+    pageNum++;
 
     try {
       if (pNode.hasMissingFont) {
@@ -111,7 +125,12 @@ async function numberSlides(slides, config) {
         await figma.loadFontAsync(pNode.fontName);
       }
 
-      pNode.characters = config.zeroPadded && pageNum < 10 ? '0' + pageNum : String(pageNum);
+      // T002: Use pre-calculated padWidth for zero-padding
+      let numStr = String(pageNum);
+      if (config.zeroPadded) {
+        numStr = numStr.padStart(padWidth, '0');
+      }
+      pNode.characters = numStr;
       result.updated++;
       result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'updated' });
     } catch (err) {
@@ -141,6 +160,19 @@ figma.ui.onmessage = async (msg) => {
     // 003: Persist onboarding dismissed state
     case 'set-onboarding-seen': {
       await figma.clientStorage.setAsync('onboardingSeen', true);
+      break;
+    }
+
+    // 004: Read persisted countCovers setting
+    case 'get-count-covers': {
+      const val = await figma.clientStorage.getAsync('countCovers');
+      figma.ui.postMessage({ type: 'count-covers-state', countCovers: val !== false });
+      break;
+    }
+
+    // 004: Persist countCovers setting
+    case 'set-count-covers': {
+      await figma.clientStorage.setAsync('countCovers', msg.countCovers);
       break;
     }
 

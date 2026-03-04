@@ -646,6 +646,15 @@
         </div>
       </div>
 
+      <div>
+        <label>Cover slides</label>
+        <div class="format-toggle">
+          <button type="button" id="covers-count" class="fmt-btn active">Count all slides</button>
+          <button type="button" id="covers-skip" class="fmt-btn">Skip covers</button>
+        </div>
+        <p class="field-hint">Whether slides without a number layer consume a number</p>
+      </div>
+
     </div>
 
     <!-- Advanced settings (collapsible) -->
@@ -797,6 +806,23 @@
       fmtPlain.classList.remove('active');
     });
 
+    // 004: Cover slides toggle
+    let countCovers = true;
+    const coversCount = document.getElementById('covers-count');
+    const coversSkip = document.getElementById('covers-skip');
+    coversCount.addEventListener('click', () => {
+      countCovers = true;
+      coversCount.classList.add('active');
+      coversSkip.classList.remove('active');
+      sendMessage('set-count-covers', { countCovers: true });
+    });
+    coversSkip.addEventListener('click', () => {
+      countCovers = false;
+      coversSkip.classList.add('active');
+      coversCount.classList.remove('active');
+      sendMessage('set-count-covers', { countCovers: false });
+    });
+
     // Advanced toggle with animated chevron
     const advancedToggle = document.getElementById('advanced-toggle');
     const advancedBody = document.getElementById('advanced-body');
@@ -887,6 +913,7 @@
         yTolerance: parseInt(document.getElementById('y-tolerance').value, 10),
         startingNumber: parseInt(document.getElementById('starting-number').value, 10),
         zeroPadded: zeroPadded,
+        countCovers: countCovers,
       };
     }
 
@@ -914,6 +941,19 @@
         case 'onboarding-state': {
           hasSeen = !!msg.hasSeen;
           showView(hasSeen ? 'main-view' : 'onboarding-view');
+          break;
+        }
+
+        // 004: Restore persisted countCovers toggle state
+        case 'count-covers-state': {
+          countCovers = msg.countCovers !== false;
+          if (countCovers) {
+            coversCount.classList.add('active');
+            coversSkip.classList.remove('active');
+          } else {
+            coversSkip.classList.add('active');
+            coversCount.classList.remove('active');
+          }
           break;
         }
 
@@ -956,6 +996,11 @@
           document.getElementById('res-total').textContent   = r.totalSlides;
           document.getElementById('res-updated').textContent = r.updated;
           document.getElementById('res-skipped').textContent = r.skipped;
+          // 004: Update covers label to reflect counting mode
+          const coversLabel = document.querySelector('#results .result-row:nth-child(3) .result-label');
+          if (coversLabel) {
+            coversLabel.textContent = countCovers ? 'Covers (no label)' : 'Covers (not counted)';
+          }
 
           const errCount = document.getElementById('res-errors');
           errCount.textContent = r.errors.length;
@@ -1012,6 +1057,7 @@
     };
 
     sendMessage('get-onboarding-state');
+    sendMessage('get-count-covers');
     sendMessage('get-sections');
   </script>
 </body>
