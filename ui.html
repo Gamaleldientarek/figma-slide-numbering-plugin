@@ -213,7 +213,13 @@
           runBtn.textContent = 'Run';
 
           if (r.totalSlides === 0 && r.errors.length === 0) {
-            document.getElementById('no-slides-state').style.display = 'block';
+            const el = document.getElementById('no-slides-state');
+            if (r.diagnosticSizes && r.diagnosticSizes.length > 0) {
+              el.textContent = `No slides found. Sizes seen in section: ${r.diagnosticSizes.join(', ')}`;
+            } else {
+              el.textContent = 'No slides found matching the current size filter.';
+            }
+            el.style.display = 'block';
             break;
           }
 

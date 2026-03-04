@@ -130,9 +130,15 @@ figma.ui.onmessage = async (msg) => {
       const slides = detectSlides(section, config);
 
       if (slides.length === 0) {
+        // Collect unique sizes of frame-like children to help diagnose filter mismatch
+        const sample = section.children
+          .filter(c => ['FRAME', 'COMPONENT', 'INSTANCE', 'COMPONENT_SET'].includes(c.type))
+          .slice(0, 10)
+          .map(c => `${Math.round(c.width)}×${Math.round(c.height)}`);
+        const unique = [...new Set(sample)];
         figma.ui.postMessage({
           type: 'numbering-complete',
-          result: { totalSlides: 0, updated: 0, skipped: 0, errors: [] },
+          result: { totalSlides: 0, updated: 0, skipped: 0, errors: [], diagnosticSizes: unique },
         });
         break;
       }
