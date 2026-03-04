@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Inter, sans-serif;
+      font-size: 11px;
+      line-height: 16px;
+      color: var(--figma-color-text);
+      background: var(--figma-color-bg);
+      padding: 12px;
+    }
+
+    /* Placeholder — form controls added in T005, T011, T012 */
+    #app {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <!-- Section dropdown — populated in T005 -->
+    <!-- Config controls — added in T012 -->
+    <!-- Run button — added in T011 -->
+    <!-- Results display — added in T011/T016 -->
+  </div>
+
+  <script>
+    // postMessage bridge between ui.html and code.js
+    function sendMessage(type, payload) {
+      parent.postMessage({ pluginMessage: { type, ...payload } }, '*');
+    }
+
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (!msg) return;
+
+      switch (msg.type) {
+        case 'sections-list':
+          // T005: populate section dropdown
+          break;
+        case 'no-sections':
+          // T005: show empty state
+          break;
+        case 'numbering-complete':
+          // T011/T016: display results
+          break;
+        default:
+          console.warn('Unhandled message:', msg.type);
+      }
+    };
+
+    // Request sections on load
+    sendMessage('get-sections');
+  </script>
+</body>
+</html>
