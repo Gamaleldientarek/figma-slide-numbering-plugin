@@ -14,17 +14,58 @@
       padding: 12px;
     }
 
-    /* Placeholder — form controls added in T005, T011, T012 */
     #app {
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
+
+    label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--figma-color-text-secondary);
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    select {
+      width: 100%;
+      height: 28px;
+      padding: 0 8px;
+      font-size: 11px;
+      font-family: inherit;
+      color: var(--figma-color-text);
+      background: var(--figma-color-bg);
+      border: 1px solid var(--figma-color-border);
+      border-radius: 4px;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--figma-color-border-strong);
+    }
+
+    #empty-state {
+      font-size: 11px;
+      color: var(--figma-color-text-secondary);
+      text-align: center;
+      padding: 16px 0;
+    }
   </style>
 </head>
 <body>
   <div id="app">
-    <!-- Section dropdown — populated in T005 -->
+    <div id="section-row">
+      <label for="section-select">Section</label>
+      <select id="section-select"></select>
+      <p id="empty-state" style="display:none;">No sections found on this page.</p>
+    </div>
+
     <!-- Config controls — added in T012 -->
     <!-- Run button — added in T011 -->
     <!-- Results display — added in T011/T016 -->
@@ -41,12 +82,21 @@
       if (!msg) return;
 
       switch (msg.type) {
-        case 'sections-list':
-          // T005: populate section dropdown
+        case 'sections-list': {
+          const select = document.getElementById('section-select');
+          msg.sections.forEach(s => {
+            const opt = document.createElement('option');
+            opt.value = s.id;
+            opt.textContent = s.name;
+            select.appendChild(opt);
+          });
           break;
-        case 'no-sections':
-          // T005: show empty state
+        }
+        case 'no-sections': {
+          document.getElementById('section-select').style.display = 'none';
+          document.getElementById('empty-state').style.display = 'block';
           break;
+        }
         case 'numbering-complete':
           // T011/T016: display results
           break;
