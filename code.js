@@ -17,13 +17,31 @@ function detectSlides(section, config) {
 }
 
 // ---------------------------------------------------------------------------
-// T007: Slide sorting — group by Y row (±tolerance), then left-to-right by X
+// T007: Slide sorting — pre-group into rows by Y tolerance, then sort by X
+// (Fix C1: transitive row grouping instead of non-transitive comparator)
 // ---------------------------------------------------------------------------
 function sortSlides(slides, yTolerance) {
-  return [...slides].sort((a, b) => {
-    if (Math.abs(a.y - b.y) > yTolerance) return a.y - b.y;
-    return a.x - b.x;
-  });
+  // Sort by Y first to enable row grouping
+  const byY = [...slides].sort((a, b) => a.y - b.y);
+
+  // Group into rows: start a new row when the Y gap exceeds tolerance
+  const rows = [];
+  let currentRow = [];
+  for (const slide of byY) {
+    if (currentRow.length === 0 || Math.abs(slide.y - currentRow[0].y) <= yTolerance) {
+      currentRow.push(slide);
+    } else {
+      rows.push(currentRow);
+      currentRow = [slide];
+    }
+  }
+  if (currentRow.length > 0) rows.push(currentRow);
+
+  // Sort each row left-to-right by X, then flatten
+  for (const row of rows) {
+    row.sort((a, b) => a.x - b.x);
+  }
+  return rows.flat();
 }
 
 // ---------------------------------------------------------------------------
@@ -44,17 +62,30 @@ function findPageNumNode(node, identifier) {
 
 // ---------------------------------------------------------------------------
 // T009: Numbering engine — load fonts, assign sequential numbers, skip covers
+// (Fix M2: cancellation support for large sections)
+// (Fix m8: undo grouping so Cmd+Z reverts the whole operation)
 // ---------------------------------------------------------------------------
 async function numberSlides(slides, config) {
   const result = { totalSlides: slides.length, updated: 0, skipped: 0, errors: [] };
   let pageNum = config.startingNumber - 1;
 
+  // Cancellation support (M2)
+  let cancelled = false;
   let notifyHandle = null;
   if (slides.length > 20) {
-    notifyHandle = figma.notify('Numbering slides…', { timeout: Infinity });
+    notifyHandle = figma.notify('Numbering slides…', {
+      timeout: Infinity,
+      button: { text: 'Cancel', action: () => { cancelled = true; } },
+    });
   }
 
   for (const slide of slides) {
+    if (cancelled) {
+      notifyHandle?.cancel();
+      figma.notify('Numbering cancelled.');
+      break;
+    }
+
     pageNum++;
     const pNode = findPageNumNode(slide, config.identifier);
 
@@ -91,7 +122,7 @@ async function numberSlides(slides, config) {
     }
   }
 
-  if (notifyHandle) notifyHandle.cancel();
+  if (notifyHandle && !cancelled) notifyHandle.cancel();
   return result;
 }
 
@@ -117,7 +148,9 @@ figma.ui.onmessage = async (msg) => {
     // T010: run detection → sort → number pipeline
     case 'run-numbering': {
       const config = msg.config;
-      const section = figma.currentPage.findOne(n => n.id === config.sectionId);
+
+      // Fix M3: use direct children lookup instead of deep findOne traversal
+      const section = figma.currentPage.children.find(n => n.id === config.sectionId);
 
       if (!section || section.type !== 'SECTION') {
         figma.ui.postMessage({
@@ -130,7 +163,6 @@ figma.ui.onmessage = async (msg) => {
       const slides = detectSlides(section, config);
 
       if (slides.length === 0) {
-        // Collect unique sizes of frame-like children to help diagnose filter mismatch
         const sample = section.children
           .filter(c => ['FRAME', 'COMPONENT', 'INSTANCE', 'COMPONENT_SET'].includes(c.type))
           .slice(0, 10)
