@@ -25,46 +25,79 @@
 
     /* ── Onboarding view ──────────────────────────────────── */
     #onboarding-view {
-      padding: 16px;
-      gap: 12px;
-      overflow-y: auto;
+      padding: 0;
+      gap: 0;
     }
 
-    .onboarding-section {
+    .onboarding-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 14px 14px 10px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 14px;
     }
 
-    .onboarding-section h3 {
+    .onboarding-scroll::-webkit-scrollbar { width: 3px; }
+    .onboarding-scroll::-webkit-scrollbar-track { background: transparent; }
+    .onboarding-scroll::-webkit-scrollbar-thumb { background: var(--figma-color-border-strong); border-radius: 2px; }
+
+    .onboarding-step {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--figma-color-bg-brand);
+      color: var(--figma-color-text-onbrand);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .step-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .step-content h3 {
       font-size: 11px;
       font-weight: 700;
       color: var(--figma-color-text);
+      margin-bottom: 3px;
     }
 
-    .onboarding-section p {
+    .step-content p {
       font-size: 11px;
       color: var(--figma-color-text-secondary);
       line-height: 16px;
     }
 
-    .onboarding-example {
-      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
-      border: 1px solid var(--figma-color-border);
-      border-radius: 6px;
-      padding: 10px 12px;
+    .onboarding-code {
+      display: inline;
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.04));
+      border-radius: 3px;
+      padding: 1px 5px;
       font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
       font-size: 10px;
-      line-height: 16px;
+      font-weight: 600;
       color: var(--figma-color-text);
-      white-space: pre;
     }
 
     .onboarding-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      max-width: 160px;
+      gap: 3px;
+      max-width: 120px;
+      margin-top: 6px;
     }
 
     .onboarding-grid span {
@@ -74,15 +107,21 @@
       background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
       border: 1px solid var(--figma-color-border);
       border-radius: 4px;
-      height: 28px;
-      font-size: 11px;
+      height: 22px;
+      font-size: 10px;
       font-weight: 600;
       color: var(--figma-color-text);
     }
 
+    .onboarding-footer {
+      padding: 10px 14px 14px;
+      flex-shrink: 0;
+      border-top: 1px solid var(--figma-color-border);
+    }
+
     button#got-it-btn {
       width: 100%;
-      height: 38px;
+      height: 36px;
       font-size: 12px;
       font-family: inherit;
       font-weight: 700;
@@ -91,12 +130,13 @@
       border: none;
       border-radius: 10px;
       cursor: pointer;
-      margin-top: auto;
-      transition: background 0.15s ease;
+      transition: background 0.15s ease, box-shadow 0.15s ease;
+      box-shadow: 0 2px 8px color-mix(in srgb, var(--figma-color-bg-brand) 30%, transparent);
     }
 
     button#got-it-btn:hover {
       background: var(--figma-color-bg-brand-hover);
+      box-shadow: 0 4px 12px color-mix(in srgb, var(--figma-color-bg-brand) 40%, transparent);
     }
 
     /* ── Main scroll area ─────────────────────────────────── */
@@ -530,32 +570,41 @@
       </div>
     </header>
 
-    <div class="onboarding-section">
-      <h3>What this plugin does</h3>
-      <p>Automatically assigns page numbers to slides in a Figma section. Just add a text layer with a special name to each slide, and the plugin writes the numbers for you.</p>
-    </div>
+    <div class="onboarding-scroll">
+      <div class="onboarding-step">
+        <span class="step-num">1</span>
+        <div class="step-content">
+          <h3>Add a number layer</h3>
+          <p>In each slide frame, create a <strong>Text</strong> layer named <span class="onboarding-code">{p#}</span>. The plugin replaces its text with the page number.</p>
+          <p>Slides without this layer are skipped — perfect for covers.</p>
+        </div>
+      </div>
 
-    <div class="onboarding-section">
-      <h3>Setting up the page number layer</h3>
-      <p>Inside each slide frame, create a <strong>Text layer</strong> and name it so it contains <strong>{p#}</strong>. The plugin will find it and replace the text with the page number.</p>
-      <div class="onboarding-example">Slide 01 (Frame)
-├── Background
-├── Title
-└── {p#}  ← name your text layer this</div>
-      <p>Slides without a <strong>{p#}</strong> layer are skipped (great for covers and dividers).</p>
-    </div>
+      <div class="onboarding-step">
+        <span class="step-num">2</span>
+        <div class="step-content">
+          <h3>Pick a section & run</h3>
+          <p>Choose the Figma <strong>Section</strong> that holds your slides, then hit <strong>Number Slides</strong>.</p>
+        </div>
+      </div>
 
-    <div class="onboarding-section">
-      <h3>Reading order</h3>
-      <p>Slides are numbered <strong>left-to-right</strong> within each row, and rows are processed <strong>top-to-bottom</strong>:</p>
-      <div class="onboarding-grid">
-        <span>1</span><span>2</span><span>3</span>
-        <span>4</span><span>5</span><span>6</span>
-        <span>7</span><span>8</span><span>9</span>
+      <div class="onboarding-step">
+        <span class="step-num">3</span>
+        <div class="step-content">
+          <h3>Reading order</h3>
+          <p>Slides are numbered <strong>left → right</strong>, then <strong>top → bottom</strong>:</p>
+          <div class="onboarding-grid">
+            <span>1</span><span>2</span><span>3</span>
+            <span>4</span><span>5</span><span>6</span>
+            <span>7</span><span>8</span><span>9</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <button id="got-it-btn">Got it</button>
+    <div class="onboarding-footer">
+      <button id="got-it-btn">Got it</button>
+    </div>
   </div>
 
   <!-- Main view — the normal plugin UI -->
