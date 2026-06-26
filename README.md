@@ -10,8 +10,12 @@ Automatically number slides in a Figma section. Works with any presentation layo
 - **Smart sorting**: Slides are numbered left-to-right within each row, rows are processed top-to-bottom
 - **Flexible identifier**: Name your page number text layer anything containing your chosen identifier (default: `{p#}`)
 - **Cover slide support**: Slides without the identifier layer are automatically skipped (treated as covers)
+- **Number formats**: Plain (`1, 2, 3`), zero-padded (`01, 02`), or a custom template using `#` as the placeholder (e.g. `Page #`)
 - **Configurable**: Starting number, slide size filter, and row tolerance are all adjustable
 - **Per-slide log**: See exactly what happened to every slide after each run
+- **Resizable window**: Drag the bottom-right corner to resize; your preferred size is remembered
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ---
 

@@ -13,6 +13,8 @@ plugin version history.
 - **Refresh button** beside the Section dropdown to re-scan the page for sections
   without closing and reopening the plugin. Shows a brief status message
   ("Refreshing…" → "N sections found").
+- **Resizable window.** Drag the bottom-right corner handle to make the plugin
+  taller or wider. The chosen size is remembered and restored on next launch.
 
 ### Fixed
 - **Sections sometimes not loading.** With dynamic-page document access, the
@@ -21,9 +23,15 @@ plugin version history.
   page change and when the plugin window regains focus.
 - **Refresh button placement** in the empty state — it now stays aligned next to
   a centered "No sections found" message.
+- **Number Slides button no longer compresses** when Advanced settings are
+  expanded; the content area scrolls instead of squashing controls.
+- Removed the dated native number-input spinner arrows on the Advanced fields.
 
 ### Changed
-- Modernized the scrollbars throughout the UI (thinner, rounded).
+- **UI modernization pass:** consistent 8px-radius rhythm, taller 32px controls,
+  and more breathing room across the header, cards, toggles, and results.
+- **New slim scrollbar** with a short, capped thumb that floats inside the frame
+  (never touching the edges) and only appears when content actually overflows.
 
 ## [1.3.0]
 
