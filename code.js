@@ -145,6 +145,36 @@ async function numberSlides(slides, config) {
 }
 
 // ---------------------------------------------------------------------------
+// Section listing — load the current page first so children are available
+// (Fix: with documentAccess "dynamic-page", reading figma.currentPage.children
+//  before the page is loaded can return an empty list, so sections appear
+//  missing until the plugin is reopened. loadAsync() makes it deterministic.)
+// ---------------------------------------------------------------------------
+async function postSections() {
+  try {
+    // Ensure the current page's nodes are loaded (dynamic-page access).
+    if (typeof figma.currentPage.loadAsync === 'function') {
+      await figma.currentPage.loadAsync();
+    }
+
+    const sections = figma.currentPage.children
+      .filter(c => c.type === 'SECTION')
+      .map(c => ({ id: c.id, name: c.name }));
+
+    if (sections.length === 0) {
+      figma.ui.postMessage({ type: 'no-sections' });
+    } else {
+      figma.ui.postMessage({ type: 'sections-list', sections });
+    }
+  } catch (err) {
+    figma.ui.postMessage({ type: 'no-sections' });
+  }
+}
+
+// Auto-refresh the section list when the user switches pages.
+figma.on('currentpagechange', () => { postSections(); });
+
+// ---------------------------------------------------------------------------
 // Message handler
 // ---------------------------------------------------------------------------
 figma.ui.onmessage = async (msg) => {
@@ -177,15 +207,7 @@ figma.ui.onmessage = async (msg) => {
     }
 
     case 'get-sections': {
-      const sections = figma.currentPage.children
-        .filter(c => c.type === 'SECTION')
-        .map(c => ({ id: c.id, name: c.name }));
-
-      if (sections.length === 0) {
-        figma.ui.postMessage({ type: 'no-sections' });
-      } else {
-        figma.ui.postMessage({ type: 'sections-list', sections });
-      }
+      await postSections();
       break;
     }
 

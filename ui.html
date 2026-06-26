@@ -278,6 +278,57 @@
       border-color: var(--figma-color-text-danger, #f24822);
     }
 
+    /* ── Section row (select + refresh) ──────────────────── */
+    .section-row {
+      display: flex;
+      gap: 6px;
+      align-items: stretch;
+    }
+
+    .section-row select { flex: 1; min-width: 0; }
+
+    #refresh-btn {
+      flex-shrink: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid var(--figma-color-border);
+      border-radius: 7px;
+      background: var(--figma-color-bg);
+      color: var(--figma-color-text-secondary);
+      cursor: pointer;
+      padding: 0;
+      transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+    }
+
+    #refresh-btn:hover {
+      color: var(--figma-color-text);
+      border-color: var(--figma-color-border-strong);
+      background: var(--figma-color-bg-secondary, rgba(0,0,0,0.04));
+    }
+
+    #refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    #refresh-btn.spinning svg { animation: refresh-spin 0.6s linear; }
+
+    #refresh-status {
+      font-size: 10px;
+      line-height: 14px;
+      margin-top: 4px;
+      color: var(--figma-color-text-brand, var(--figma-color-bg-brand));
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    #refresh-status.show { opacity: 1; }
+
+    @keyframes refresh-spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
     .range-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -627,9 +678,18 @@
 
       <div>
         <label for="section-select">Section</label>
-        <select id="section-select"></select>
+        <div class="section-row">
+          <select id="section-select"></select>
+          <button id="refresh-btn" type="button" title="Refresh section list" aria-label="Refresh section list">
+            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M13.65 8a5.65 5.65 0 1 1-1.66-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <path d="M13.5 2.5V6H10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+        </div>
         <p class="field-hint">Slides must be direct children of this section</p>
-        <p id="empty-state" style="display:none;">No sections found on this page.</p>
+        <p id="refresh-status" role="status" aria-live="polite"></p>
+        <p id="empty-state" style="display:none;">No sections found on this page. Add a Section, then hit refresh.</p>
       </div>
 
       <div>
@@ -919,6 +979,49 @@
 
     const runBtn = document.getElementById('run-btn');
     const sectionSelect = document.getElementById('section-select');
+    const refreshBtn = document.getElementById('refresh-btn');
+
+    // ── Section refresh ──────────────────────────────────
+    const refreshStatus = document.getElementById('refresh-status');
+    let statusHideTimer = null;
+    function setRefreshStatus(text, autoHide) {
+      refreshStatus.textContent = text;
+      refreshStatus.classList.add('show');
+      if (statusHideTimer) { clearTimeout(statusHideTimer); statusHideTimer = null; }
+      if (autoHide) {
+        statusHideTimer = setTimeout(() => refreshStatus.classList.remove('show'), 2000);
+      }
+    }
+
+    let refreshTimer = null;
+    function startRefreshSpin() {
+      refreshBtn.classList.remove('spinning');
+      // force reflow so the animation restarts on rapid clicks
+      void refreshBtn.offsetWidth;
+      refreshBtn.classList.add('spinning');
+      refreshBtn.disabled = true;
+    }
+    function stopRefreshSpin() {
+      refreshBtn.disabled = false;
+      refreshBtn.classList.remove('spinning');
+      if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+    }
+    function requestSections() {
+      startRefreshSpin();
+      sendMessage('get-sections');
+      // Safety: re-enable the button even if no reply arrives
+      if (refreshTimer) clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(stopRefreshSpin, 3000);
+    }
+
+    refreshBtn.addEventListener('click', () => {
+      setRefreshStatus('Refreshing…', false);
+      requestSections();
+    });
+
+    // Re-fetch sections when the plugin window regains focus — picks up
+    // sections added while the plugin was in the background.
+    window.addEventListener('focus', () => { sendMessage('get-sections'); });
 
     runBtn.addEventListener('click', () => {
       if (!validate()) return;
@@ -958,6 +1061,8 @@
         }
 
         case 'sections-list': {
+          // Preserve the current selection across a refresh when possible
+          const prev = sectionSelect.value;
           sectionSelect.innerHTML = '';
           msg.sections.forEach(s => {
             const opt = document.createElement('option');
@@ -965,13 +1070,28 @@
             opt.textContent = s.name;
             sectionSelect.appendChild(opt);
           });
+          if (msg.sections.some(s => s.id === prev)) sectionSelect.value = prev;
+
+          // Restore visibility — recovers from a prior "no-sections" state
+          sectionSelect.style.display = '';
+          document.getElementById('empty-state').style.display = 'none';
           runBtn.disabled = false;
+          if (refreshStatus.classList.contains('show')) {
+            const n = msg.sections.length;
+            setRefreshStatus(n + (n === 1 ? ' section found' : ' sections found'), true);
+          }
+          stopRefreshSpin();
           break;
         }
 
         case 'no-sections': {
           sectionSelect.style.display = 'none';
           document.getElementById('empty-state').style.display = 'block';
+          runBtn.disabled = true;
+          if (refreshStatus.classList.contains('show')) {
+            setRefreshStatus('No sections found', true);
+          }
+          stopRefreshSpin();
           break;
         }
 
