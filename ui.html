@@ -13,6 +13,8 @@
       --figma-color-text-onbrand: #ffffff;
     }
 
+    html { height: 100%; }
+
     body {
       font-family: Inter, sans-serif;
       font-size: 11px;
@@ -21,14 +23,59 @@
       background: var(--figma-color-bg);
       display: flex;
       flex-direction: column;
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
     }
+
+    /* ── Scrollbars — slim, inset floating pill ──────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    /* Vertical margin insets the track so the bar floats and
+       never reaches the top/bottom edge of the frame. */
+    ::-webkit-scrollbar-track { background: transparent; margin: 10px 0; }
+    ::-webkit-scrollbar-thumb {
+      background: var(--figma-color-border-strong);
+      border-radius: 6px;
+      min-height: 28px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--figma-color-text-secondary);
+    }
+
+    /* ── Resize handle ───────────────────────────────────── */
+    #resize-handle {
+      position: fixed;
+      right: 0;
+      bottom: 0;
+      width: 20px;
+      height: 20px;
+      cursor: nwse-resize;
+      z-index: 10;
+      touch-action: none;
+    }
+
+    #resize-handle::after {
+      content: "";
+      position: absolute;
+      right: 6px;
+      bottom: 6px;
+      width: 6px;
+      height: 6px;
+      border-right: 1.5px solid var(--figma-color-border-strong);
+      border-bottom: 1.5px solid var(--figma-color-border-strong);
+      border-bottom-right-radius: 2px;
+      opacity: 0.7;
+      transition: opacity 0.15s ease;
+    }
+
+    #resize-handle:hover::after { opacity: 1; }
 
     /* ── Views — both start hidden; JS shows the correct one ─ */
     #onboarding-view, #main-view {
       display: none;
       flex-direction: column;
       flex: 1;
+      min-height: 0;
+      position: relative;
     }
 
     /* ── Onboarding view ──────────────────────────────────── */
@@ -39,16 +86,13 @@
 
     .onboarding-scroll {
       flex: 1;
+      min-height: 0;
       overflow-y: auto;
-      padding: 14px 14px 10px;
+      padding: 16px 16px 12px;
       display: flex;
       flex-direction: column;
       gap: 14px;
     }
-
-    .onboarding-scroll::-webkit-scrollbar { width: 3px; }
-    .onboarding-scroll::-webkit-scrollbar-track { background: transparent; }
-    .onboarding-scroll::-webkit-scrollbar-thumb { background: var(--figma-color-border-strong); border-radius: 2px; }
 
     .onboarding-step {
       display: flex;
@@ -150,19 +194,50 @@
     /* ── Main scroll area ─────────────────────────────────── */
     #main-view > #app {
       flex: 1;
+      min-height: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      padding: 12px 12px 8px;
+      gap: 12px;
+      padding: 16px 16px 12px;
       overflow-y: auto;
     }
+
+    /* Keep children at their natural height so the area scrolls
+       instead of compressing items (e.g. the Number Slides button). */
+    #main-view > #app > * { flex-shrink: 0; }
+
+    /* Hide the native scrollbar — replaced by a custom short thumb */
+    #main-view > #app { scrollbar-width: none; }
+    #main-view > #app::-webkit-scrollbar { width: 0; height: 0; }
+
+    /* ── Custom scrollbar (short capped thumb) ───────────── */
+    #app-scrollbar {
+      position: absolute;
+      right: 3px;
+      width: 6px;
+      display: none;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    #app-thumb {
+      width: 6px;
+      border-radius: 6px;
+      background: var(--figma-color-border-strong);
+      pointer-events: auto;
+      cursor: grab;
+      transition: background 0.15s ease;
+    }
+
+    #app-thumb:hover { background: var(--figma-color-text-secondary); }
+    #app-thumb:active { cursor: grabbing; }
 
     /* ── Header ──────────────────────────────────────────── */
     .plugin-header {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding-bottom: 12px;
+      gap: 12px;
+      padding-bottom: 14px;
       border-bottom: 1px solid var(--figma-color-border);
     }
 
@@ -227,11 +302,11 @@
     .card {
       background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
       border: 1px solid var(--figma-color-border);
-      border-radius: 10px;
-      padding: 12px;
+      border-radius: 12px;
+      padding: 14px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 14px;
     }
 
     /* ── Labels ──────────────────────────────────────────── */
@@ -242,20 +317,20 @@
       letter-spacing: 0.05em;
       color: var(--figma-color-text-secondary);
       display: block;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
 
     /* ── Inputs ──────────────────────────────────────────── */
     select, input[type="text"], input[type="number"] {
       width: 100%;
-      height: 30px;
+      height: 32px;
       padding: 0 10px;
       font-size: 11px;
       font-family: inherit;
       color: var(--figma-color-text);
       background: var(--figma-color-bg);
       border: 1.5px solid var(--figma-color-border);
-      border-radius: 7px;
+      border-radius: 8px;
       transition: border-color 0.15s ease, box-shadow 0.15s ease;
     }
 
@@ -264,8 +339,20 @@
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='5' viewBox='0 0 8 5'%3E%3Cpath d='M0 0l4 5 4-5z' fill='%23888'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
+      background-position: right 12px center;
+      padding-right: 30px;
+    }
+
+    /* Remove the dated native number-input spinner arrows */
+    input[type="number"] {
+      -moz-appearance: textfield;
+      appearance: textfield;
+    }
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      appearance: none;
+      margin: 0;
     }
 
     select:focus, input:focus {
@@ -289,13 +376,13 @@
 
     #refresh-btn {
       flex-shrink: 0;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       display: flex;
       align-items: center;
       justify-content: center;
       border: 1.5px solid var(--figma-color-border);
-      border-radius: 7px;
+      border-radius: 8px;
       background: var(--figma-color-bg);
       color: var(--figma-color-text-secondary);
       cursor: pointer;
@@ -357,7 +444,7 @@
 
     .fmt-btn {
       flex: 1;
-      height: 28px;
+      height: 32px;
       padding: 0 10px;
       font-size: 11px;
       font-family: inherit;
@@ -369,13 +456,14 @@
       transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
     }
 
+    .fmt-btn:not(:last-child) { border-right: none; }
+
     .fmt-btn:first-child {
-      border-radius: 6px 0 0 6px;
-      border-right: none;
+      border-radius: 8px 0 0 8px;
     }
 
     .fmt-btn:last-child {
-      border-radius: 0 6px 6px 0;
+      border-radius: 0 8px 8px 0;
     }
 
     .fmt-btn.active {
@@ -395,8 +483,8 @@
       width: 100%;
       background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
       border: 1px solid var(--figma-color-border);
-      border-radius: 8px;
-      padding: 7px 11px;
+      border-radius: 10px;
+      padding: 10px 12px;
       font-size: 11px;
       font-family: inherit;
       font-weight: 500;
@@ -435,7 +523,8 @@
     /* ── Run button ──────────────────────────────────────── */
     button#run-btn {
       width: 100%;
-      height: 38px;
+      height: 40px;
+      margin-top: 2px;
       font-size: 12px;
       font-family: inherit;
       font-weight: 700;
@@ -443,7 +532,7 @@
       color: var(--figma-color-text-onbrand);
       background: var(--figma-color-bg-brand);
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       cursor: pointer;
       transition: background 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
       box-shadow: 0 2px 8px color-mix(in srgb, var(--figma-color-bg-brand) 30%, transparent);
@@ -469,7 +558,7 @@
     }
 
     /* ── Empty / no-slides states ────────────────────────── */
-    #empty-state, #no-slides-state {
+    #no-slides-state {
       font-size: 11px;
       color: var(--figma-color-text-secondary);
       text-align: center;
@@ -480,13 +569,34 @@
       line-height: 16px;
     }
 
+    /* Empty-state sits inline in the section row, beside the refresh button */
+    #empty-state {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      height: 32px;
+      padding: 0 10px;
+      font-size: 11px;
+      color: var(--figma-color-text-secondary);
+      background: var(--figma-color-bg);
+      border: 1.5px solid var(--figma-color-border);
+      border-radius: 8px;
+      line-height: 14px;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
     /* ── Results card ────────────────────────────────────── */
     #results {
       display: none;
       flex-direction: column;
       background: var(--figma-color-bg-secondary, rgba(0,0,0,0.025));
       border: 1px solid var(--figma-color-border);
-      border-radius: 10px;
+      border-radius: 12px;
       overflow: hidden;
     }
 
@@ -494,7 +604,7 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      padding: 8px 12px;
+      padding: 10px 14px;
       border-bottom: 1px solid var(--figma-color-border);
       font-size: 10px;
       font-weight: 700;
@@ -504,10 +614,10 @@
     }
 
     .results-body {
-      padding: 10px 12px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 7px;
+      gap: 8px;
     }
 
     .result-row {
@@ -549,10 +659,6 @@
     }
 
     #slide-log { max-height: 130px; overflow-y: auto; }
-
-    #slide-log::-webkit-scrollbar { width: 3px; }
-    #slide-log::-webkit-scrollbar-track { background: transparent; }
-    #slide-log::-webkit-scrollbar-thumb { background: var(--figma-color-border-strong); border-radius: 2px; }
 
     .log-row {
       display: flex;
@@ -680,6 +786,7 @@
         <label for="section-select">Section</label>
         <div class="section-row">
           <select id="section-select"></select>
+          <span id="empty-state" style="display:none;">No sections found on this page</span>
           <button id="refresh-btn" type="button" title="Refresh section list" aria-label="Refresh section list">
             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M13.65 8a5.65 5.65 0 1 1-1.66-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
@@ -689,7 +796,6 @@
         </div>
         <p class="field-hint">Slides must be direct children of this section</p>
         <p id="refresh-status" role="status" aria-live="polite"></p>
-        <p id="empty-state" style="display:none;">No sections found on this page. Add a Section, then hit refresh.</p>
       </div>
 
       <div>
@@ -702,8 +808,12 @@
         <label>Number format</label>
         <div class="format-toggle">
           <button type="button" id="fmt-plain" class="fmt-btn active">1, 2, 3</button>
-          <button type="button" id="fmt-padded" class="fmt-btn">01, 02, 03</button>
+          <button type="button" id="fmt-padded" class="fmt-btn">01, 02</button>
+          <button type="button" id="fmt-custom" class="fmt-btn">Custom</button>
         </div>
+        <input type="text" id="custom-format" value="Page #" placeholder="e.g. Page #" style="display:none; margin-top:8px;" />
+        <p class="field-hint" id="custom-format-hint" style="display:none;">Use <span class="onboarding-code" style="padding:0 3px;">#</span> for the number. Repeat (<span class="onboarding-code" style="padding:0 3px;">##</span>) to zero-pad — e.g. <strong>Page #</strong> → Page 1.</p>
+        <p class="validation-error" id="custom-format-error" style="display:none;"></p>
       </div>
 
       <div>
@@ -809,11 +919,17 @@
 
   </div>
 
+  <!-- Custom scrollbar with a short, capped thumb -->
+  <div id="app-scrollbar"><div id="app-thumb"></div></div>
+
   <!-- Footer -->
   <footer>
     Made with ❤️ by <a id="author-link" href="#">Gamal Eldien</a>
   </footer>
   </div><!-- /main-view -->
+
+  <!-- Drag to resize the plugin window -->
+  <div id="resize-handle" title="Drag to resize"></div>
 
   <script>
     function sendMessage(type, payload) {
@@ -828,7 +944,106 @@
     function showView(viewId) {
       onboardingView.style.display = viewId === 'onboarding-view' ? 'flex' : 'none';
       mainView.style.display = viewId === 'main-view' ? 'flex' : 'none';
+      if (viewId === 'main-view') scheduleScrollbarUpdate();
     }
+
+    // ── Custom scrollbar (short, capped thumb) ───────────
+    const scrollEl = document.getElementById('app');
+    const sbTrack = document.getElementById('app-scrollbar');
+    const sbThumb = document.getElementById('app-thumb');
+    const SB_INSET = 10;     // gap from top/bottom of the frame
+    const SB_MAX_THUMB = 56; // keep the thumb visibly short
+    const SB_MIN_THUMB = 28;
+
+    function thumbHeight(ch, sh, trackH) {
+      return Math.min(SB_MAX_THUMB, Math.max(SB_MIN_THUMB, (ch / sh) * trackH));
+    }
+
+    function updateScrollbar() {
+      const ch = scrollEl.clientHeight;
+      const sh = scrollEl.scrollHeight;
+      if (sh <= ch + 1) { sbTrack.style.display = 'none'; return; }
+      const trackH = ch - SB_INSET * 2;
+      const th = thumbHeight(ch, sh, trackH);
+      const progress = scrollEl.scrollTop / (sh - ch);
+      sbTrack.style.display = 'block';
+      sbTrack.style.top = (scrollEl.offsetTop + SB_INSET) + 'px';
+      sbTrack.style.height = trackH + 'px';
+      sbThumb.style.height = th + 'px';
+      sbThumb.style.transform = 'translateY(' + (progress * (trackH - th)) + 'px)';
+    }
+
+    let sbRaf = null;
+    function scheduleScrollbarUpdate() {
+      if (sbRaf) cancelAnimationFrame(sbRaf);
+      sbRaf = requestAnimationFrame(() => { sbRaf = null; updateScrollbar(); });
+    }
+
+    scrollEl.addEventListener('scroll', scheduleScrollbarUpdate);
+    window.addEventListener('resize', scheduleScrollbarUpdate);
+    // Recompute when content changes height (advanced toggle, results, etc.)
+    new MutationObserver(scheduleScrollbarUpdate)
+      .observe(scrollEl, { childList: true, subtree: true, attributes: true });
+
+    // Drag the thumb to scroll
+    let sbDragging = false, sbStartY = 0, sbStartScroll = 0;
+    sbThumb.addEventListener('mousedown', (e) => {
+      sbDragging = true;
+      sbStartY = e.clientY;
+      sbStartScroll = scrollEl.scrollTop;
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!sbDragging) return;
+      const ch = scrollEl.clientHeight, sh = scrollEl.scrollHeight;
+      const trackH = ch - SB_INSET * 2;
+      const th = thumbHeight(ch, sh, trackH);
+      const travel = trackH - th;
+      if (travel <= 0) return;
+      const dy = e.clientY - sbStartY;
+      scrollEl.scrollTop = sbStartScroll + (dy / travel) * (sh - ch);
+    });
+    window.addEventListener('mouseup', () => {
+      if (!sbDragging) return;
+      sbDragging = false;
+      document.body.style.userSelect = '';
+    });
+
+    // ── Window resize handle ─────────────────────────────
+    const resizeHandle = document.getElementById('resize-handle');
+    const UI_MIN_W = 320, UI_MAX_W = 800;
+    const UI_MIN_H = 400, UI_MAX_H = 1200;
+    let rzActive = false, rzStartX = 0, rzStartY = 0, rzStartW = 0, rzStartH = 0;
+
+    resizeHandle.addEventListener('pointerdown', (e) => {
+      rzActive = true;
+      rzStartX = e.clientX;
+      rzStartY = e.clientY;
+      rzStartW = window.innerWidth;
+      rzStartH = window.innerHeight;
+      resizeHandle.setPointerCapture(e.pointerId);
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    resizeHandle.addEventListener('pointermove', (e) => {
+      if (!rzActive) return;
+      const width = Math.min(UI_MAX_W, Math.max(UI_MIN_W, Math.round(rzStartW + (e.clientX - rzStartX))));
+      const height = Math.min(UI_MAX_H, Math.max(UI_MIN_H, Math.round(rzStartH + (e.clientY - rzStartY))));
+      sendMessage('resize', { width, height });
+    });
+
+    function endResize(e) {
+      if (!rzActive) return;
+      rzActive = false;
+      document.body.style.userSelect = '';
+      try { resizeHandle.releasePointerCapture(e.pointerId); } catch (_) {}
+      // Persist the final size
+      sendMessage('resize', { width: window.innerWidth, height: window.innerHeight, save: true });
+    }
+    resizeHandle.addEventListener('pointerup', endResize);
+    resizeHandle.addEventListener('pointercancel', endResize);
 
     // "Got it" dismiss button
     document.getElementById('got-it-btn').addEventListener('click', () => {
@@ -851,20 +1066,31 @@
       sendMessage('open-url', { url: 'https://gamaleldien.com/' });
     });
 
-    // Number format toggle
-    let zeroPadded = false;
+    // Number format toggle (plain / padded / custom)
+    let numberFormat = 'plain';
     const fmtPlain = document.getElementById('fmt-plain');
     const fmtPadded = document.getElementById('fmt-padded');
-    fmtPlain.addEventListener('click', () => {
-      zeroPadded = false;
-      fmtPlain.classList.add('active');
-      fmtPadded.classList.remove('active');
-    });
-    fmtPadded.addEventListener('click', () => {
-      zeroPadded = true;
-      fmtPadded.classList.add('active');
-      fmtPlain.classList.remove('active');
-    });
+    const fmtCustom = document.getElementById('fmt-custom');
+    const customFormatInput = document.getElementById('custom-format');
+    const customFormatHint = document.getElementById('custom-format-hint');
+    const customFormatError = document.getElementById('custom-format-error');
+
+    function setFormat(fmt) {
+      numberFormat = fmt;
+      fmtPlain.classList.toggle('active', fmt === 'plain');
+      fmtPadded.classList.toggle('active', fmt === 'padded');
+      fmtCustom.classList.toggle('active', fmt === 'custom');
+      const showCustom = fmt === 'custom';
+      customFormatInput.style.display = showCustom ? 'block' : 'none';
+      customFormatHint.style.display = showCustom ? 'block' : 'none';
+      if (!showCustom) {
+        customFormatInput.classList.remove('invalid');
+        customFormatError.style.display = 'none';
+      }
+    }
+    fmtPlain.addEventListener('click', () => setFormat('plain'));
+    fmtPadded.addEventListener('click', () => setFormat('padded'));
+    fmtCustom.addEventListener('click', () => setFormat('custom'));
 
     // 004: Cover slides toggle
     let countCovers = true;
@@ -959,6 +1185,16 @@
         valid = false;
       }
 
+      if (numberFormat === 'custom') {
+        const tmpl = customFormatInput.value;
+        if (!tmpl || tmpl.indexOf('#') === -1) {
+          customFormatInput.classList.add('invalid');
+          customFormatError.textContent = 'Include # where the number should go (e.g. "Page #").';
+          customFormatError.style.display = 'block';
+          valid = false;
+        }
+      }
+
       return valid;
     }
 
@@ -972,7 +1208,9 @@
         maxHeight: parseInt(document.getElementById('max-height').value, 10),
         yTolerance: parseInt(document.getElementById('y-tolerance').value, 10),
         startingNumber: parseInt(document.getElementById('starting-number').value, 10),
-        zeroPadded: zeroPadded,
+        format: numberFormat,
+        customFormat: customFormatInput.value,
+        zeroPadded: numberFormat === 'padded',
         countCovers: countCovers,
       };
     }
@@ -1086,7 +1324,7 @@
 
         case 'no-sections': {
           sectionSelect.style.display = 'none';
-          document.getElementById('empty-state').style.display = 'block';
+          document.getElementById('empty-state').style.display = 'flex';
           runBtn.disabled = true;
           if (refreshStatus.classList.contains('show')) {
             setRefreshStatus('No sections found', true);
@@ -1179,6 +1417,10 @@
     sendMessage('get-onboarding-state');
     sendMessage('get-count-covers');
     sendMessage('get-sections');
+
+    // Evaluate scrollbar visibility once everything has laid out
+    window.addEventListener('load', scheduleScrollbarUpdate);
+    scheduleScrollbarUpdate();
   </script>
 </body>
 </html>

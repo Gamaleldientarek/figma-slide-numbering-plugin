@@ -3,6 +3,18 @@
 
 figma.showUI(__html__, { width: 320, height: 560, themeColors: true });
 
+// Restore the user's last chosen window size (set via the resize handle).
+figma.clientStorage.getAsync('uiSize').then((size) => {
+  if (size && size.width && size.height) {
+    figma.ui.resize(size.width, size.height);
+  }
+}).catch(() => {});
+
+// Window size constraints for the resize handle.
+const UI_MIN_W = 320, UI_MAX_W = 800;
+const UI_MIN_H = 400, UI_MAX_H = 1200;
+function clamp(n, lo, hi) { return Math.min(hi, Math.max(lo, Math.round(n))); }
+
 // ---------------------------------------------------------------------------
 // T006: Slide detection
 // ---------------------------------------------------------------------------
@@ -58,6 +70,21 @@ function findPageNumNode(node, identifier) {
     }
   }
   return null;
+}
+
+// ---------------------------------------------------------------------------
+// Page-number formatting — plain, zero-padded, or a custom template.
+// Custom: each run of '#' in the template is replaced by the page number,
+// zero-padded to the length of that run. e.g. "Page #" → "Page 3",
+// "Slide ##" → "Slide 03".
+// ---------------------------------------------------------------------------
+function formatPageNumber(pageNum, config, padWidth) {
+  if (config.format === 'custom' && config.customFormat && config.customFormat.indexOf('#') !== -1) {
+    return config.customFormat.replace(/#+/g, (run) => String(pageNum).padStart(run.length, '0'));
+  }
+  // Backward compat: fall back to the zeroPadded flag when format is absent.
+  const padded = config.format ? config.format === 'padded' : config.zeroPadded;
+  return padded ? String(pageNum).padStart(padWidth, '0') : String(pageNum);
 }
 
 // ---------------------------------------------------------------------------
@@ -125,12 +152,8 @@ async function numberSlides(slides, config) {
         await figma.loadFontAsync(pNode.fontName);
       }
 
-      // T002: Use pre-calculated padWidth for zero-padding
-      let numStr = String(pageNum);
-      if (config.zeroPadded) {
-        numStr = numStr.padStart(padWidth, '0');
-      }
-      pNode.characters = numStr;
+      // T002: Use pre-calculated padWidth for zero-padding; supports custom format
+      pNode.characters = formatPageNumber(pageNum, config, padWidth);
       result.updated++;
       result.slideDetails.push({ name: slide.name, pageNumber: pageNum, status: 'updated' });
     } catch (err) {
@@ -244,6 +267,17 @@ figma.ui.onmessage = async (msg) => {
       const sorted = sortSlides(slides, config.yTolerance);
       const result = await numberSlides(sorted, config);
       figma.ui.postMessage({ type: 'numbering-complete', result });
+      break;
+    }
+
+    // Resize the plugin window from the UI's drag handle
+    case 'resize': {
+      const w = clamp(msg.width, UI_MIN_W, UI_MAX_W);
+      const h = clamp(msg.height, UI_MIN_H, UI_MAX_H);
+      figma.ui.resize(w, h);
+      if (msg.save) {
+        await figma.clientStorage.setAsync('uiSize', { width: w, height: h });
+      }
       break;
     }
 
